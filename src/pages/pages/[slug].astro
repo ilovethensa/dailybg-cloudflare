@@ -24,7 +24,6 @@ const ogImage = page.data.heroImage ? new URL(page.data.heroImage.src, Astro.url
 	description={page.data.description}
 	image={ogImage}
 	canonical={`${Astro.url.origin}/pages/${page.id}`}
-	tags={[]}
 >
 	<article class="page-article">
 		<header class="page-header">

@@ -18,7 +18,6 @@ interface Props {
 	publishedTime?: string | null;
 	modifiedTime?: string | null;
 	author?: string | null;
-	tags?: Array<{ slug: string; label: string }>;
 }
 
 const {
@@ -32,7 +31,6 @@ const {
 	publishedTime,
 	modifiedTime,
 	author,
-	tags = [],
 } = Astro.props;
 
 const siteTitle = SITE_TITLE;
@@ -97,7 +95,7 @@ const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
 		</script>
 	</head>
 	<body>
-		<Header siteTitle={siteTitle} tags={tags} />
+		<Header siteTitle={siteTitle} />
 
 		<main>
 			<slot />

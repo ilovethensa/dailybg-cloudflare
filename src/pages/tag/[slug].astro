@@ -1,7 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import PostCard from "../../components/PostCard.astro";
-import { getPostsByTag, getUniqueTags, getAllPosts, toPostSummary } from "../../lib/posts-db";
+import { getPostsByTag, toPostSummary } from "../../lib/posts-db";
 
 export const prerender = false;
 
@@ -11,12 +11,10 @@ type Props = {
 
 const { label } = Astro.props;
 const posts = await getPostsByTag(label);
-const allPosts = await getAllPosts();
-const tags = getUniqueTags(allPosts).map((tag) => ({ slug: tag.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label: tag }));
 const summaries = posts.map(toPostSummary);
 ---
 
-<Base title={`Posts tagged "${label}"`} description={`All posts tagged with ${label}`} {tags}>
+<Base title={`Posts tagged "${label}"`} description={`All posts tagged with ${label}`}>
 	<section class="archive-section">
 		<header class="archive-header">
 			<span class="archive-label">Tag</span>

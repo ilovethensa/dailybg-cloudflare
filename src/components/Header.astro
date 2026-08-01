@@ -1,10 +1,9 @@
 ---
 interface Props {
 	siteTitle: string;
-	tags: Array<{ slug: string; label: string }>;
 }
 
-const { siteTitle, tags } = Astro.props;
+const { siteTitle } = Astro.props;
 ---
 
 <header class="bg-surface border-b border-outline-variant sticky top-0 z-50">
@@ -19,16 +18,18 @@ const { siteTitle, tags } = Astro.props;
 			>
 		</div>
 		<nav class="hidden md:flex items-center gap-stack-md">
-			{tags.map((tag, i) => (
-				<a
-					class={`font-navigation text-navigation ${
-						i === 0 ? "text-primary border-b border-primary pb-1" : "text-secondary hover:text-primary"
-					}`}
-					href={`/tag/${tag.slug}`}
-				>
-					{tag.label}
-				</a>
-			))}
+			<a
+				class="font-navigation text-navigation text-secondary hover:text-primary"
+				href="/pages/about"
+			>
+				About
+			</a>
+			<a
+				class="font-navigation text-navigation text-secondary hover:text-primary"
+				href="/pages/contact"
+			>
+				Contact
+			</a>
 		</nav>
 		<div class="flex items-center gap-stack-md">
 			<a href="/search" class="material-symbols-outlined cursor-pointer hover:text-primary">search</a>

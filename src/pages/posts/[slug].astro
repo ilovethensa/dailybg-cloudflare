@@ -44,7 +44,6 @@ const related = otherPosts.map(toPostSummary);
 	publishedTime={post.pubDate.toISOString()}
 	modifiedTime={(post.updatedDate ?? post.pubDate).toISOString()}
 	author={post.author}
-	tags={tags}
 >
 	<article class="article">
 		{/* Hero: Full-width featured image */}

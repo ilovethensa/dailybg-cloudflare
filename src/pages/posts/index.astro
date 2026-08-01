@@ -1,11 +1,10 @@
 ---
 import Base from "../../layouts/Base.astro";
-import { getAllPosts, getUniqueTags, toPostSummary } from "../../lib/posts-db";
+import { getAllPosts, toPostSummary } from "../../lib/posts-db";
 
 export const prerender = false;
 
 const posts = await getAllPosts();
-const tags = getUniqueTags(posts).map((label) => ({ slug: label.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label }));
 const summaries = posts.map(toPostSummary);
 
 const formatDate = (date: Date) =>
@@ -16,7 +15,7 @@ const formatDate = (date: Date) =>
 	});
 ---
 
-<Base title="All Posts" description="Browse all articles" {tags}>
+<Base title="All Posts" description="Browse all articles">
 	<div class="posts-page">
 		<header class="page-header">
 			<span class="page-kicker">Latest</span>

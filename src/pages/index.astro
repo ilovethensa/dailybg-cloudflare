@@ -1,12 +1,11 @@
 ---
 import Base from "../layouts/Base.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
-import { getAllPosts, getUniqueTags, toPostSummary } from "../lib/posts-db";
+import { getAllPosts, toPostSummary } from "../lib/posts-db";
 
 export const prerender = false;
 
 const posts = await getAllPosts();
-const tags = getUniqueTags(posts).map((label) => ({ slug: label.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label }));
 const items = posts.map(toPostSummary);
 const [lead, side, ...rest] = items;
 const stories = rest.slice(0, 3);
@@ -14,7 +13,7 @@ const briefing = rest.slice(3, 6);
 const longRead = rest[6] ?? null;
 ---
 
-<Base title={SITE_TITLE} description={SITE_DESCRIPTION} {tags}>
+<Base title={SITE_TITLE} description={SITE_DESCRIPTION}>
   <!-- Micro-styles from target -->
   <style>
     .article-border-b { border-bottom: 1px solid #e0e0e0; }
