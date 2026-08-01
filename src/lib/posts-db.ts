@@ -12,6 +12,7 @@ export type Post = {
 	category: string | null;
 	tags: string[];
 	author: string | null;
+	/** Absolute URL to the hero/cover image */
 	heroImage: string | null;
 	draft: boolean;
 	readingTime: number;
@@ -105,6 +106,7 @@ export interface PostSummary {
 	href: string;
 	title: string;
 	excerpt: string | null;
+	/** Absolute URL to the hero/cover image */
 	image: string | undefined;
 	category: { slug: string; label: string } | null;
 	tags: Array<{ slug: string; label: string }>;

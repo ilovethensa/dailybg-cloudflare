@@ -5,6 +5,7 @@ import type { ImageMetadata } from "astro";
 interface Props {
 	title: string;
 	excerpt?: string;
+	/** ImageMetadata for local assets, or an absolute URL string for remote images */
 	heroImage?: ImageMetadata | string;
 	href: string;
 	date?: Date;
