@@ -5,11 +5,8 @@ import { getPostBySlug, getAllPosts, toPostSummary } from "../../lib/posts-db";
 
 export const prerender = false;
 
-type Props = {
-	post: Awaited<ReturnType<typeof getPostBySlug>>;
-};
-
-const { post } = Astro.props;
+const slug = Astro.params.slug;
+const post = slug ? await getPostBySlug(slug) : null;
 
 if (!post) {
 	return Astro.redirect("/404");
