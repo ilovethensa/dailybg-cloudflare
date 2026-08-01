@@ -1,14 +1,14 @@
 ---
-title: 'About'
-description: 'About this blog and the person behind it.'
+title: 'За нас'
+description: 'За DailyBG - независим новинарски източник от София'
 ---
 
-This is the About page for this blog. It is a content-collection page rendered from `src/content/pages/about.md`.
+DailyBG е независим новинарски източник от София, предоставящ обективни и задълбочени анализи на събитията в България и по света.
 
-## What this site is
+## Нашата мисия
 
-A place for writing about building for the web — static sites, tools, and the craft of software.
+Вярваме, че информираността е основата на демокрацията. Нашата цел е да предоставяме качествена журналистика, която помага на хората да разбират света около тях и да вземат информирани решения.
 
-## Colophon
+## Нашите принципи
 
-Built with Astro, styled after the dailybg editorial design, and powered by content collections instead of a CMS database.
+Независимост, обективност и дълбочина. Ние не търсим сензации — търсим истината. Нашата работа е да виждаме отвъд повърхността и да ви даваме контекст, който липсва в бързите новини.

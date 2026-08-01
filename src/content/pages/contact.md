@@ -9,7 +9,8 @@ This is the Contact page for dailyBG.
 
 Have a question, feedback, or just want to say hello? Reach out to us.
 
-- **Email:** hello@dailybg.example.com
-- **Twitter/X:** [@dailybg](https://twitter.com/dailybg)
+- **TikTok:** [@dailybgnews](https://tiktok.com/@dailybgnews)
+- **Facebook:** [Dailybg](https://www.facebook.com/people/Dailybg/61587644461517/)
+- **Email:** [contact@dailybg.org](mailto:contact@dailybg.org)
 
 We read every message and will get back to you as soon as possible.

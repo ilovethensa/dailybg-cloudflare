@@ -30,9 +30,9 @@
 
 	/* E-ink: no accent color. Links read as black-on-paper, set apart by
 	 * weight/underline rather than hue. */
-	--color-brand: light-dark(#1a1a1a, #ededed);
-	--color-brand-hover: light-dark(#000000, #ffffff);
-	--color-brand-ring: light-dark(rgba(26, 26, 26, 0.25), rgba(237, 237, 237, 0.3));
+	--color-brand: light-dark(#0066cc, #4d9fff);
+	--color-brand-hover: light-dark(#0052a3, #6eb0ff);
+	--color-brand-ring: light-dark(rgba(0, 102, 204, 0.25), rgba(77, 159, 255, 0.3));
 	--color-on-brand: #ffffff;
 }
 
