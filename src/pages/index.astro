@@ -35,10 +35,10 @@ const longRead = rest[6] ?? null;
             <article class="md:col-span-8 md:pr-gutter hover-underline cursor-pointer group py-stack-md">
               <a href={lead.href} class="mb-stack-md overflow-hidden block">
                 {lead.image ? (
-                  <img src={lead.image} class="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" alt={lead.title} />
-                ) : (
-                  <div class="w-full h-[500px] bg-surface"></div>
-                )}
+                  <img src={lead.image} class="w-full h-[300px] md:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" alt={lead.title} />
+                  ) : (
+                    <div class="w-full h-[300px] md:h-[500px] bg-surface"></div>
+                  )}
               </a>
               <div class="flex flex-col gap-2">
                 <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
@@ -70,7 +70,7 @@ const longRead = rest[6] ?? null;
                   {side.image && (
                     <div class="my-stack-md">
                       <a href={side.href} class="block overflow-hidden">
-                        <img src={side.image} class="w-full h-64 object-cover" alt={side.title} />
+                        <img src={side.image} class="w-full h-40 md:h-64 object-cover" alt={side.title} />
                       </a>
                     </div>
                   )}
@@ -112,9 +112,9 @@ const longRead = rest[6] ?? null;
               <article class={`md:pr-gutter md:article-border-r hover-underline cursor-pointer group py-stack-md${idx === 1 ? " md:px-gutter" : ""}`}>
                 <a href={story.href} class="mb-stack-md block overflow-hidden">
                   {story.image ? (
-                    <img src={story.image} class="w-full h-48 object-cover" alt={story.title} />
+                    <img src={story.image} class="w-full h-40 md:h-48 object-cover" alt={story.title} />
                   ) : (
-                    <div class="w-full h-48 bg-surface"></div>
+                    <div class="w-full h-40 md:h-48 bg-surface"></div>
                   )}
                 </a>
                 <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
@@ -164,13 +164,13 @@ const longRead = rest[6] ?? null;
               </div>
               <div class="md:w-1/2 bg-surface-container overflow-hidden">
                 {longRead.image ? (
-                  <a
-                    href={longRead.href}
-                    class="block w-full h-full min-h-[300px] bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-1000"
-                    style={`background-image: url('${longRead.image}')`}
-                  ></a>
+                    <a
+                      href={longRead.href}
+                      class="block w-full h-full min-h-[200px] md:min-h-[300px] bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-1000"
+                      style={`background-image: url('${longRead.image}')`}
+                    ></a>
                 ) : (
-                  <div class="w-full h-full min-h-[300px] bg-surface"></div>
+                  <div class="w-full h-full min-h-[200px] md:min-h-[300px] bg-surface"></div>
                 )}
               </div>
             </article>
