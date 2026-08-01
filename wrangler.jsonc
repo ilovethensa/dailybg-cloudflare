@@ -1,10 +1,11 @@
 {
-  "name": "dailybg-rewrite",
-  "compatibility_date": "2025-05-21",
-  "d1_databases": [
-    {
-      "binding": "DB",
-      "database_name": "dailybg"
-    }
-  ]
+	"name": "dailybg-rewrite",
+	"compatibility_date": "2025-05-21",
+	"d1_databases": [
+		{
+			"binding": "DB",
+			"database_name": "dailybg",
+			"database_id": "ed2ca9ad-e97b-47f9-844d-450d016e5845"
+		}
+	]
 }
