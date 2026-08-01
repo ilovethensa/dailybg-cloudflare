@@ -1,49 +1,200 @@
 ---
-import BaseHead from '../components/BaseHead.astro';
-import Footer from '../components/Footer.astro';
-import Header from '../components/Header.astro';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import { Image } from "astro:assets";
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+import { sortPosts, toPostSummary } from "../utils/posts";
+
+const posts = sortPosts(await getCollection("posts")).filter((post) => !post.data.draft);
+
+const formatDate = (date: Date) =>
+	date.toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	});
+
+const formatTime = (date: Date) =>
+	date.toLocaleTimeString("en-US", {
+		hour: "numeric",
+		minute: "2-digit",
+	});
+
+const items = posts.map(toPostSummary);
+const [lead, side, ...rest] = items;
+const stories = rest.slice(0, 3);
+const briefing = rest.slice(3, 6);
+const longRead = rest[6] ?? null;
 ---
 
-<!doctype html>
-<html lang="en">
-	<head>
-		<BaseHead title={SITE_TITLE} description={SITE_DESCRIPTION} />
-	</head>
-	<body>
-		<Header />
-		<main>
-			<h1>🧑‍🚀 Hello, Astronaut!</h1>
-			<p>
-				Welcome to the official <a href="https://astro.build/">Astro</a> blog starter template. This template
-				serves as a lightweight, minimally-styled starting point for anyone looking to build a personal
-				website, blog, or portfolio with Astro.
-			</p>
-			<p>
-				This template comes with a few integrations already configured in your
-				<code>astro.config.mjs</code> file. You can customize your setup with
-				<a href="https://astro.build/integrations">Astro Integrations</a> to add tools like Tailwind,
-				React, or Vue to your project.
-			</p>
-			<p>Here are a few ideas on how to get started with the template:</p>
-			<ul>
-				<li>Edit this page in <code>src/pages/index.astro</code></li>
-				<li>Edit the site header items in <code>src/components/Header.astro</code></li>
-				<li>Add your name to the footer in <code>src/components/Footer.astro</code></li>
-				<li>Check out the included blog posts in <code>src/content/blog/</code></li>
-				<li>Customize the blog post page layout in <code>src/layouts/BlogPost.astro</code></li>
-			</ul>
-			<p>
-				Have fun! If you get stuck, remember to
-				<a href="https://docs.astro.build/">read the docs</a>
-				or <a href="https://astro.build/chat">join us on Discord</a> to ask questions.
-			</p>
-			<p>
-				Looking for a blog template with a bit more personality? Check out
-				<a href="https://github.com/Charca/astro-blog-template">astro-blog-template</a>
-				by <a href="https://twitter.com/Charca">Maxi Ferreira</a>.
-			</p>
-		</main>
-		<Footer />
-	</body>
-</html>
+<Base title={SITE_TITLE} description={SITE_DESCRIPTION}>
+  <!-- Micro-styles from target -->
+  <style>
+    body {
+      background-color: #f9f9f9;
+      color: #1a1c1c;
+      -webkit-font-smoothing: antialiased;
+    }
+    .article-border-b { border-bottom: 1px solid #e0e0e0; }
+    .article-border-r { border-right: 1px solid #e0e0e0; }
+    .hover-underline:hover .headline-text { text-decoration: underline; text-underline-offset: 4px; }
+    .headline-text a { color: inherit; }
+  </style>
+
+  {items.length === 0 ? (
+    <section class="empty-state py-12 text-center">
+      <h2 class="text-2xl mb-2">No posts yet</h2>
+      <p class="text-on-surface-variant mb-4">Create your first post in <code>src/content/posts/</code>.</p>
+    </section>
+  ) : (
+    <div class="max-w-[1280px] mx-auto px-margin-desktop bg-surface-bright text-primary">
+      <!-- Feature Section (Asymmetrical Grid) -->
+        <section class="grid grid-cols-1 md:grid-cols-12 article-border-b">
+          {lead && (
+            <article class="md:col-span-8 md:article-border-r pr-gutter hover-underline cursor-pointer group py-stack-md">
+              <a href={lead.href} class="mb-stack-md overflow-hidden block">
+                {lead.image ? (
+                  <Image src={lead.image} class="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" alt={lead.title} />
+                ) : (
+                  <div class="w-full h-[500px] bg-surface"></div>
+                )}
+              </a>
+              <div class="flex flex-col gap-2">
+                <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
+                  {lead.category?.label ?? "Featured"} • {lead.readingTime} Min Read
+                </span>
+                <h2 class="font-headline-xl text-headline-xl headline-text leading-tight">
+                  <a href={lead.href}>{lead.title}</a>
+                </h2>
+                {lead.excerpt && <p class="font-article-body text-secondary mt-stack-sm max-w-2xl text-meta-ui">{lead.excerpt}</p>}
+                <div class="mt-4 flex items-center gap-2">
+                  {lead.author && <span class="font-meta-ui font-bold">By {lead.author}</span>}
+                  <span class="text-outline">•</span>
+                  <span class="font-meta-ui text-on-surface-variant">{formatDate(lead.date)}</span>
+                </div>
+              </div>
+            </article>
+          )}
+
+          {side && (
+            <article class="md:col-span-4 pl-gutter hover-underline cursor-pointer group py-stack-md">
+              <div class="flex flex-col h-full justify-between">
+                <div>
+                  <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
+                    {side.category?.label ?? "Policy"} • {side.tags[0]?.label ?? "Dispatch"}
+                  </span>
+                  <h3 class="font-headline-lg text-headline-lg headline-text mt-2 leading-snug">
+                    <a href={side.href}>{side.title}</a>
+                  </h3>
+                  {side.image && (
+                    <div class="my-stack-md">
+                      <a href={side.href} class="block overflow-hidden">
+                        <Image src={side.image} class="w-full h-64 object-cover" alt={side.title} />
+                      </a>
+                    </div>
+                  )}
+                  {side.excerpt && <p class="font-meta-ui text-on-surface-variant leading-relaxed">{side.excerpt}</p>}
+                </div>
+                <div class="mt-stack-lg pt-stack-md border-t border-outline-variant">
+                  {side.author && <span class="font-meta-ui font-bold">By {side.author}</span>}
+                </div>
+              </div>
+            </article>
+          )}
+        </section>
+
+        <!-- Secondary Grid (3 Columns) -->
+        <section class="grid grid-cols-1 md:grid-cols-3 article-border-b">
+          {stories.map((story, idx) => {
+            const isTextOnly = idx === 2;
+            return isTextOnly ? (
+              <article class="pl-gutter hover-underline cursor-pointer py-stack-md">
+                <div class="flex flex-col justify-center h-full">
+                  <span class="text-label-sm font-label-sm text-error uppercase font-bold">
+                    {story.category?.label ?? story.tags[0]?.label ?? "Economy Analysis"}
+                  </span>
+                  <h4 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg headline-text mt-2 leading-snug">
+                    <a href={story.href}>{story.title}</a>
+                  </h4>
+                  {story.excerpt && (
+                    <>
+                      <p class="font-article-body text-article-body text-on-surface-variant mt-4 italic leading-relaxed">“{story.excerpt}”</p>
+                      <p class="font-meta-ui text-on-surface-variant mt-4 leading-relaxed">{story.excerpt}</p>
+                    </>
+                  )}
+                  <div class="mt-6 flex items-center gap-2">
+                    {story.author && <span class="font-meta-ui font-bold">{story.author}</span>}
+                  </div>
+                </div>
+              </article>
+            ) : (
+              <article class={`pr-gutter md:article-border-r hover-underline cursor-pointer group py-stack-md${idx === 1 ? " px-gutter" : ""}`}>
+                <a href={story.href} class="mb-stack-md block overflow-hidden">
+                  {story.image ? (
+                    <Image src={story.image} class="w-full h-48 object-cover" alt={story.title} />
+                  ) : (
+                    <div class="w-full h-48 bg-surface"></div>
+                  )}
+                </a>
+                <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
+                  {story.category?.label ?? story.tags[0]?.label ?? "Story"}
+                </span>
+                <h4 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg headline-text mt-2 leading-snug">
+                  <a href={story.href}>{story.title}</a>
+                </h4>
+                {story.excerpt && <p class="font-meta-ui text-on-surface-variant mt-3 leading-relaxed">{story.excerpt}</p>}
+                <div class="mt-4 flex items-center gap-2">
+                  {story.author && <span class="font-meta-ui font-bold">{story.author}</span>}
+                </div>
+              </article>
+            );
+          })}
+        </section>
+
+        <!-- Briefs & Long Read -->
+        <section class="grid grid-cols-1 md:grid-cols-4 gap-gutter py-stack-md">
+          <div class="col-span-1">
+            <h5 class="text-label-sm font-label-sm uppercase border-b border-primary pb-2 mb-stack-md">The Briefing</h5>
+            <ul class="flex flex-col gap-stack-md">
+              {briefing.map((b) => (
+                <li class="hover:opacity-70 transition-opacity cursor-pointer">
+                  <a href={b.href}>
+                    <p class="font-meta-ui font-bold leading-tight">{b.title}</p>
+                    <span class="text-label-sm text-on-surface-variant">
+                      {formatTime(b.date) || `${b.readingTime} min`}
+                    </span>
+                  </a>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          {longRead && (
+            <article class="md:col-span-3 flex flex-col md:flex-row gap-gutter group cursor-pointer border-l border-outline-variant pl-gutter">
+              <div class="md:w-1/2">
+                <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Long Read</span>
+                <h4 class="font-headline-xl text-headline-lg-mobile md:text-headline-lg headline-text mt-2">
+                  <a href={longRead.href}>{longRead.title}</a>
+                </h4>
+                {longRead.excerpt && <p class="font-meta-ui text-on-surface-variant mt-4 leading-relaxed">{longRead.excerpt}</p>}
+                <div class="mt-4">
+                  <a href={longRead.href} class="font-meta-ui font-bold underline">Read the special report →</a>
+                </div>
+              </div>
+              <div class="md:w-1/2 bg-surface-container overflow-hidden">
+                {longRead.image ? (
+                  <a
+                    href={longRead.href}
+                    class="block w-full h-full min-h-[300px] bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-1000"
+                    style={`background-image: url('${longRead.image.src}')`}
+                  ></a>
+                ) : (
+                  <div class="w-full h-full min-h-[300px] bg-surface"></div>
+                )}
+              </div>
+            </article>
+          )}
+        </section>
+    </div>
+  )}
+</Base>

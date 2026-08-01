@@ -1,0 +1,244 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../layouts/Base.astro";
+
+// With content collections the site is static, so search runs client-side:
+// the post index is embedded here and filtered as the user types.
+const posts = (await getCollection("posts")).filter((post) => !post.data.draft);
+
+const searchData = posts.map((post) => ({
+	id: post.id,
+	title: post.data.title,
+	excerpt: post.data.excerpt ?? "",
+	body: (post.body ?? "").replace(/[#>*_`~|]/g, " ").replace(/\s+/g, " ").trim(),
+}));
+---
+
+<Base title="Search" description="Search blog posts">
+	<section class="search-page">
+		<h1 class="search-title">Search</h1>
+
+		<form method="get" action="/search" class="search-form">
+			<input
+				type="search"
+				name="q"
+				id="search-input"
+				placeholder="Search posts..."
+				class="search-input"
+				autocomplete="off"
+			/>
+			<button type="submit" class="search-button">Search</button>
+		</form>
+
+		<p class="search-summary" id="search-summary"></p>
+
+		<ol class="search-results" id="search-results"></ol>
+
+		<p class="search-hint" id="search-hint">Enter a search term to find posts.</p>
+	</section>
+
+	<script type="application/json" id="search-data" set:html={JSON.stringify(searchData).replace(/</g, "\\u003c")} />
+
+	<script>
+		const dataEl = document.getElementById("search-data");
+		const posts = JSON.parse(dataEl.textContent);
+		const input = document.getElementById("search-input");
+		const form = document.querySelector(".search-form");
+		const summary = document.getElementById("search-summary");
+		const results = document.getElementById("search-results");
+		const hint = document.getElementById("search-hint");
+
+		function escapeHtml(str) {
+			return str
+				.replace(/&/g, "&amp;")
+				.replace(/</g, "&lt;")
+				.replace(/>/g, "&gt;")
+				.replace(/"/g, "&quot;");
+		}
+
+		function escapeRegExp(str) {
+			return str.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+		}
+
+		function highlight(text, q) {
+			return escapeHtml(text).replace(
+				new RegExp(`(${escapeRegExp(q)})`, "gi"),
+				"<mark>$1</mark>",
+			);
+		}
+
+		function makeSnippet(post, q) {
+			const hay = `${post.excerpt} ${post.body}`;
+			const idx = hay.toLowerCase().indexOf(q.toLowerCase());
+			if (idx === -1) return "";
+			const start = Math.max(0, idx - 60);
+			const end = Math.min(hay.length, idx + q.length + 90);
+			const snippet =
+				(start > 0 ? "…" : "") + hay.slice(start, end) + (end < hay.length ? "…" : "");
+			return highlight(snippet, q);
+		}
+
+		function render() {
+			const q = input.value.trim();
+			if (!q) {
+				summary.textContent = "";
+				results.innerHTML = "";
+				hint.hidden = false;
+				return;
+			}
+
+			hint.hidden = true;
+			const ql = q.toLowerCase();
+			const matches = posts
+				.filter((p) =>
+					`${p.title} ${p.excerpt} ${p.body}`.toLowerCase().includes(ql),
+				)
+				.slice(0, 30);
+
+			summary.textContent =
+				matches.length === 0
+					? `No results for "${q}"`
+					: `${matches.length} result${matches.length === 1 ? "" : "s"} for "${q}"`;
+
+			results.innerHTML = matches
+				.map((p) => {
+					const title = highlight(p.title, q);
+					const snippet = makeSnippet(p, q);
+					return `<li class="search-result"><a href="/posts/${p.id}" class="result-link"><h2 class="result-title">${title}</h2>${
+						snippet ? `<p class="result-snippet">${snippet}</p>` : ""
+					}</a></li>`;
+				})
+				.join("");
+		}
+
+		form.addEventListener("submit", (e) => {
+			e.preventDefault();
+			const q = input.value.trim();
+			history.replaceState(
+				null,
+				"",
+				q ? `?q=${encodeURIComponent(q)}` : window.location.pathname,
+			);
+			render();
+		});
+
+		input.addEventListener("input", render);
+
+		// Initial render from ?q=
+		const initial = new URLSearchParams(window.location.search).get("q");
+		if (initial) {
+			input.value = initial;
+			render();
+		}
+	</script>
+</Base>
+
+<style is:global>
+	.search-page {
+		max-width: var(--max-width);
+		margin: 0 auto;
+		padding: var(--spacing-8) var(--spacing-6) var(--spacing-16);
+	}
+
+	.search-title {
+		font-size: var(--font-size-2xl);
+		margin-bottom: var(--spacing-6);
+	}
+
+	.search-form {
+		display: flex;
+		gap: var(--spacing-2);
+		margin-bottom: var(--spacing-8);
+	}
+
+	.search-input {
+		flex: 1;
+		padding: var(--spacing-2) var(--spacing-4);
+		font-size: var(--font-size-base);
+		border: 1px solid var(--color-border);
+		border-radius: var(--radius);
+		background: var(--color-bg);
+		color: var(--color-text);
+	}
+
+	.search-input:focus {
+		outline: none;
+		border-color: var(--color-brand);
+	}
+
+	.search-button {
+		padding: var(--spacing-2) var(--spacing-6);
+		font-size: var(--font-size-base);
+		background: var(--color-brand);
+		color: var(--color-on-brand);
+		border: none;
+		border-radius: var(--radius);
+		cursor: pointer;
+		font-weight: 500;
+	}
+
+	.search-button:hover {
+		opacity: 0.9;
+	}
+
+	.search-summary {
+		color: var(--color-muted);
+		margin-bottom: var(--spacing-6);
+	}
+
+	.search-hint {
+		color: var(--color-muted);
+	}
+
+	.search-results {
+		list-style: none;
+		padding: 0;
+		margin: 0;
+		display: flex;
+		flex-direction: column;
+	}
+
+	.search-result {
+		padding: var(--spacing-6) 0;
+		border-bottom: 1px solid var(--color-border-subtle);
+	}
+
+	.search-result:first-child {
+		padding-top: 0;
+	}
+
+	.search-result:last-child {
+		border-bottom: none;
+	}
+
+	.result-link {
+		display: block;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.result-title {
+		font-size: var(--font-size-xl);
+		font-weight: var(--font-weight-heading);
+		line-height: var(--leading-snug);
+		margin-bottom: var(--spacing-2);
+		transition: color var(--transition-fast);
+	}
+
+	.result-link:hover .result-title {
+		color: var(--color-brand);
+	}
+
+	.result-snippet {
+		font-size: var(--font-size-base);
+		line-height: var(--leading-relaxed);
+		color: var(--color-text-secondary);
+	}
+
+	.result-snippet mark {
+		background: var(--color-brand-ring);
+		color: inherit;
+		padding: 0 0.1em;
+		border-radius: 2px;
+	}
+</style>

@@ -1,0 +1,229 @@
+---
+import { getCollection } from "astro:content";
+import Base from "../../layouts/Base.astro";
+import { sortPosts, toPostSummary } from "../../utils/posts";
+
+const posts = sortPosts(await getCollection("posts")).filter((post) => !post.data.draft);
+const summaries = posts.map(toPostSummary);
+
+const formatDate = (date: Date) =>
+	date.toLocaleDateString("en-US", {
+		year: "numeric",
+		month: "long",
+		day: "numeric",
+	});
+---
+
+<Base title="All Posts" description="Browse all articles">
+	<div class="posts-page">
+		<header class="page-header">
+			<span class="page-kicker">Latest</span>
+			<h1 class="page-title">All Posts</h1>
+			<p class="page-description">
+				{posts.length}
+				{posts.length === 1 ? "article" : "articles"}
+			</p>
+		</header>
+
+		{
+			posts.length === 0 ? (
+				<p class="empty">No posts yet.</p>
+			) : (
+				<div class="posts-list">
+					{summaries.map((item) => (
+						<article class="post-item">
+							<a href={item.href} class="post-link">
+								<div class="post-topline">
+									{item.category && (
+										<a href={`/category/${item.category.slug}`} class="post-kicker">
+											{item.category.label}
+										</a>
+									)}
+									<time class="post-date">{formatDate(item.date)}</time>
+								</div>
+								<h2 class="post-title">{item.title}</h2>
+								{item.excerpt && <p class="post-excerpt">{item.excerpt}</p>}
+								<div class="post-meta">
+									{item.author && <span class="post-byline">By {item.author}</span>}
+									<span>{item.readingTime} min read</span>
+								</div>
+							</a>
+							{item.tags.length > 0 && (
+								<div class="post-tags">
+									{item.tags.slice(0, 3).map((tag) => (
+										<a href={`/tag/${tag.slug}`} class="post-tag">
+											{tag.label}
+										</a>
+									))}
+								</div>
+							)}
+						</article>
+					))}
+				</div>
+			)
+		}
+	</div>
+</Base>
+
+<style>
+	.posts-page {
+		max-width: var(--content-width);
+		margin: 0 auto;
+		padding: var(--spacing-12) var(--spacing-6) var(--spacing-16);
+	}
+
+	.page-header {
+		margin-bottom: var(--spacing-12);
+		padding-bottom: var(--spacing-8);
+		border-bottom: 1px solid var(--color-border-subtle);
+	}
+
+	.page-kicker {
+		display: block;
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-wider);
+		color: var(--color-brand);
+		margin-bottom: var(--spacing-2);
+	}
+
+	.page-title {
+		font-size: var(--font-size-4xl);
+		font-weight: var(--font-weight-display);
+		letter-spacing: var(--tracking-tight);
+		margin-bottom: var(--spacing-2);
+	}
+
+	.page-description {
+		font-size: var(--font-size-lg);
+		color: var(--color-muted);
+	}
+
+	.empty {
+		color: var(--color-muted);
+		font-size: var(--font-size-lg);
+	}
+
+	.posts-list {
+		display: flex;
+		flex-direction: column;
+	}
+
+	.post-item {
+		padding: var(--spacing-8) 0;
+		border-bottom: 1px solid var(--color-border-subtle);
+	}
+
+	.post-item:first-child {
+		padding-top: 0;
+	}
+
+	.post-item:last-child {
+		border-bottom: none;
+	}
+
+	.post-link {
+		display: block;
+		text-decoration: none;
+		color: inherit;
+	}
+
+	.post-topline {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-3);
+		margin-bottom: var(--spacing-2);
+	}
+
+	.post-kicker {
+		font-size: var(--font-size-xs);
+		font-weight: 600;
+		text-transform: uppercase;
+		letter-spacing: var(--tracking-wider);
+		color: var(--color-brand);
+		text-decoration: none;
+	}
+
+	.post-kicker:hover {
+		color: var(--color-brand-hover);
+	}
+
+	.post-date {
+		font-size: var(--font-size-xs);
+		color: var(--color-muted);
+	}
+
+	.post-title {
+		font-size: var(--font-size-2xl);
+		font-weight: var(--font-weight-heading);
+		line-height: var(--leading-snug);
+		letter-spacing: var(--tracking-snug);
+		margin-bottom: var(--spacing-2);
+		transition: color var(--transition-fast);
+	}
+
+	.post-link:hover .post-title {
+		color: var(--color-brand);
+	}
+
+	.post-excerpt {
+		font-size: var(--font-size-base);
+		line-height: var(--leading-relaxed);
+		color: var(--color-text-secondary);
+		max-width: 60ch;
+	}
+
+	.post-meta {
+		display: flex;
+		align-items: center;
+		gap: var(--spacing-3);
+		font-size: var(--font-size-sm);
+		color: var(--color-muted);
+		margin-top: var(--spacing-3);
+	}
+
+	.post-byline {
+		font-weight: 500;
+		color: var(--color-text-secondary);
+	}
+
+	.post-tags {
+		display: flex;
+		flex-wrap: wrap;
+		gap: var(--spacing-2);
+		margin-top: var(--spacing-4);
+	}
+
+	.post-tag {
+		display: inline-block;
+		padding: var(--tag-padding-y) var(--spacing-2);
+		font-size: var(--font-size-xs);
+		color: var(--color-text-secondary);
+		background: var(--color-surface);
+		border-radius: var(--radius);
+		text-decoration: none;
+		transition:
+			color var(--transition-fast),
+			background var(--transition-fast);
+	}
+
+	.post-tag:hover {
+		color: var(--color-text);
+		background: var(--color-border);
+	}
+
+	@media (max-width: 600px) {
+		.posts-page {
+			padding: var(--spacing-8) var(--spacing-4) var(--spacing-12);
+		}
+
+		.page-title {
+			font-size: var(--font-size-3xl);
+		}
+
+		.post-title {
+			font-size: var(--font-size-xl);
+		}
+	}
+</style>
