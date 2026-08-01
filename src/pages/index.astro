@@ -29,10 +29,10 @@ const longRead = rest[6] ?? null;
     </section>
   ) : (
     <div class="max-w-[1280px] mx-auto px-margin-desktop bg-surface-bright text-primary">
-      <!-- Feature Section (Asymmetrical Grid) -->
+        <!-- Feature Section (Asymmetrical Grid) -->
         <section class="grid grid-cols-1 md:grid-cols-12 article-border-b">
           {lead && (
-            <article class="md:col-span-8 md:article-border-r pr-gutter hover-underline cursor-pointer group py-stack-md">
+            <article class="md:col-span-8 md:pr-gutter hover-underline cursor-pointer group py-stack-md">
               <a href={lead.href} class="mb-stack-md overflow-hidden block">
                 {lead.image ? (
                   <img src={lead.image} class="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" alt={lead.title} />
@@ -58,7 +58,7 @@ const longRead = rest[6] ?? null;
           )}
 
           {side && (
-            <article class="md:col-span-4 pl-gutter hover-underline cursor-pointer group py-stack-md">
+            <article class="md:col-span-4 md:pl-gutter hover-underline cursor-pointer group py-stack-md">
               <div class="flex flex-col h-full justify-between">
                 <div>
                   <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
@@ -89,7 +89,7 @@ const longRead = rest[6] ?? null;
           {stories.map((story, idx) => {
             const isTextOnly = idx === 2;
             return isTextOnly ? (
-              <article class="pl-gutter hover-underline cursor-pointer py-stack-md">
+              <article class="md:pl-gutter hover-underline cursor-pointer py-stack-md">
                 <div class="flex flex-col justify-center h-full">
                   <span class="text-label-sm font-label-sm text-error uppercase font-bold">
                     {story.category?.label ?? story.tags[0]?.label ?? "Economy Analysis"}
@@ -109,7 +109,7 @@ const longRead = rest[6] ?? null;
                 </div>
               </article>
             ) : (
-              <article class={`pr-gutter md:article-border-r hover-underline cursor-pointer group py-stack-md${idx === 1 ? " px-gutter" : ""}`}>
+              <article class={`md:pr-gutter md:article-border-r hover-underline cursor-pointer group py-stack-md${idx === 1 ? " md:px-gutter" : ""}`}>
                 <a href={story.href} class="mb-stack-md block overflow-hidden">
                   {story.image ? (
                     <img src={story.image} class="w-full h-48 object-cover" alt={story.title} />
@@ -151,7 +151,7 @@ const longRead = rest[6] ?? null;
           </div>
 
           {longRead && (
-            <article class="md:col-span-3 flex flex-col md:flex-row gap-gutter group cursor-pointer border-l border-outline-variant pl-gutter">
+            <article class="md:col-span-3 flex flex-col md:flex-row gap-gutter group cursor-pointer border-l border-outline-variant md:pl-gutter">
               <div class="md:w-1/2">
                 <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Long Read</span>
                 <h4 class="font-headline-xl text-headline-lg-mobile md:text-headline-lg headline-text mt-2">
