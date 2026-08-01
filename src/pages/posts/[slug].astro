@@ -59,7 +59,7 @@ const related = otherPosts.map(toPostSummary);
 	modifiedTime={(post.data.updatedDate ?? post.data.pubDate).toISOString()}
 	author={author}
 >
-	<article class="article">
+	<article class="article" data-slug={post.id}>
 		{/* Hero: Full-width featured image */}
 		{post.data.heroImage && (
 			<div class="article-hero">
@@ -88,11 +88,15 @@ const related = otherPosts.map(toPostSummary);
 						<span class="meta-label">Published</span>
 						<time class="meta-value">{publishDate}</time>
 					</div>
-					<div class="meta-block">
-						<span class="meta-label">Reading time</span>
-						<span class="meta-value">{readingTime} min</span>
-					</div>
-					{tags.length > 0 && (
+				<div class="meta-block">
+					<span class="meta-label">Reading time</span>
+					<span class="meta-value">{readingTime} min</span>
+				</div>
+				<div class="meta-block">
+					<span class="meta-label">Views</span>
+					<span class="meta-value" id="view-count-text">Loading…</span>
+				</div>
+				{tags.length > 0 && (
 						<div class="meta-block">
 							<span class="meta-label">Tags</span>
 							<div class="meta-tags">
@@ -236,6 +240,21 @@ const related = otherPosts.map(toPostSummary);
 		buildToc();
 	</script>
 </Base>
+
+<script>
+	const slug = (document.querySelector(".article") as HTMLElement | null)?.dataset.slug ?? "";
+	const el = document.getElementById("view-count-text");
+	if (el && slug) {
+		fetch(`/api/views/${encodeURIComponent(slug)}`, { method: "POST" })
+			.then((r) => (r.ok ? r.json() : Promise.reject()))
+			.then((data) => {
+				el.textContent = `${(data as { views: number }).views} view${(data as { views: number }).views === 1 ? "" : "s"}`;
+			})
+			.catch(() => {
+				el.textContent = "0 views";
+			});
+	}
+</script>
 
 <style>
 	/* Article container */

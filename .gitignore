@@ -2,6 +2,7 @@
 dist/
 # generated types
 .astro/
+worker-configuration.d.ts
 
 # dependencies
 node_modules/
@@ -22,3 +23,6 @@ pnpm-debug.log*
 
 # jetbrains setting folder
 .idea/
+
+# Wrangler local state
+.wrangler/
