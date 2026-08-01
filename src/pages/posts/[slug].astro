@@ -78,10 +78,10 @@ const related = otherPosts.map(toPostSummary);
 						<span class="meta-label">Published</span>
 						<time class="meta-value">{publishDate}</time>
 					</div>
-					<div class="meta-block">
-						<span class="meta-label">Reading time</span>
-						<span class="meta-value">{post.tags.length} min</span>
-					</div>
+				<div class="meta-block">
+					<span class="meta-label">Reading time</span>
+					<span class="meta-value">{post.readingTime} min</span>
+				</div>
 					{tags.length > 0 && (
 						<div class="meta-block">
 							<span class="meta-label">Tags</span>
@@ -109,7 +109,7 @@ const related = otherPosts.map(toPostSummary);
 						)}
 						<time>{publishDate}</time>
 						<span class="meta-dot" />
-						<span>{post.tags.length} min read</span>
+						<span>{post.readingTime} min read</span>
 					</div>
 					{categories[0] && (
 						<a href={`/category/${categories[0].slug}`} class="article-kicker">

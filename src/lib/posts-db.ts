@@ -14,15 +14,17 @@ export type Post = {
 	author: string | null;
 	heroImage: string | null;
 	draft: boolean;
+	readingTime: number;
 };
 
 function rowToPost(row: Record<string, unknown>): Post {
+	const body = row.body as string;
 	return {
 		slug: row.slug as string,
 		title: row.title as string,
 		excerpt: (row.excerpt as string) ?? null,
-		body: row.body as string,
-		html: marked.parse(row.body as string) as string,
+		body,
+		html: marked.parse(body) as string,
 		pubDate: new Date((row.pub_date as number) * 1000),
 		updatedDate: row.updated_date ? new Date((row.updated_date as number) * 1000) : null,
 		category: (row.category as string) ?? null,
@@ -30,6 +32,7 @@ function rowToPost(row: Record<string, unknown>): Post {
 		author: (row.author as string) ?? null,
 		heroImage: (row.hero_image as string) ?? null,
 		draft: (row.draft as number) !== 0,
+		readingTime: getReadingTime(body),
 	};
 }
 
