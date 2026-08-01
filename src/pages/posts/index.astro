@@ -1,9 +1,10 @@
 ---
-import { getCollection } from "astro:content";
-import Base from "../../layouts/Base.astro";
-import { sortPosts, toPostSummary } from "../../utils/posts";
+import { getAllPosts, getUniqueTags, toPostSummary } from "../../lib/posts-db";
 
-const posts = sortPosts(await getCollection("posts")).filter((post) => !post.data.draft);
+export const prerender = false;
+
+const posts = await getAllPosts();
+const tags = getUniqueTags(posts).map((label) => ({ slug: label.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label }));
 const summaries = posts.map(toPostSummary);
 
 const formatDate = (date: Date) =>
@@ -14,7 +15,7 @@ const formatDate = (date: Date) =>
 	});
 ---
 
-<Base title="All Posts" description="Browse all articles">
+<Base title="All Posts" description="Browse all articles" {tags}>
 	<div class="posts-page">
 		<header class="page-header">
 			<span class="page-kicker">Latest</span>

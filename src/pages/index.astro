@@ -1,25 +1,10 @@
 ---
-import { Image } from "astro:assets";
-import { getCollection } from "astro:content";
-import Base from "../layouts/Base.astro";
-import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
-import { sortPosts, toPostSummary } from "../utils/posts";
+import { getAllPosts, getUniqueTags, toPostSummary } from "../lib/posts-db";
 
-const posts = sortPosts(await getCollection("posts")).filter((post) => !post.data.draft);
+export const prerender = false;
 
-const formatDate = (date: Date) =>
-	date.toLocaleDateString("en-US", {
-		year: "numeric",
-		month: "long",
-		day: "numeric",
-	});
-
-const formatTime = (date: Date) =>
-	date.toLocaleTimeString("en-US", {
-		hour: "numeric",
-		minute: "2-digit",
-	});
-
+const posts = await getAllPosts();
+const tags = getUniqueTags(posts).map((label) => ({ slug: label.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label }));
 const items = posts.map(toPostSummary);
 const [lead, side, ...rest] = items;
 const stories = rest.slice(0, 3);
@@ -27,7 +12,7 @@ const briefing = rest.slice(3, 6);
 const longRead = rest[6] ?? null;
 ---
 
-<Base title={SITE_TITLE} description={SITE_DESCRIPTION}>
+<Base title={SITE_TITLE} description={SITE_DESCRIPTION} {tags}>
   <!-- Micro-styles from target -->
   <style>
     body {
@@ -44,7 +29,7 @@ const longRead = rest[6] ?? null;
   {items.length === 0 ? (
     <section class="empty-state py-12 text-center">
       <h2 class="text-2xl mb-2">No posts yet</h2>
-      <p class="text-on-surface-variant mb-4">Create your first post in <code>src/content/posts/</code>.</p>
+      <p class="text-on-surface-variant mb-4">Add posts to the D1 database to see them here.</p>
     </section>
   ) : (
     <div class="max-w-[1280px] mx-auto px-margin-desktop bg-surface-bright text-primary">
@@ -54,7 +39,7 @@ const longRead = rest[6] ?? null;
             <article class="md:col-span-8 md:article-border-r pr-gutter hover-underline cursor-pointer group py-stack-md">
               <a href={lead.href} class="mb-stack-md overflow-hidden block">
                 {lead.image ? (
-                  <Image src={lead.image} class="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" alt={lead.title} />
+                  <img src={lead.image} class="w-full h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" alt={lead.title} />
                 ) : (
                   <div class="w-full h-[500px] bg-surface"></div>
                 )}
@@ -70,7 +55,7 @@ const longRead = rest[6] ?? null;
                 <div class="mt-4 flex items-center gap-2">
                   {lead.author && <span class="font-meta-ui font-bold">By {lead.author}</span>}
                   <span class="text-outline">•</span>
-                  <span class="font-meta-ui text-on-surface-variant">{formatDate(lead.date)}</span>
+                  <span class="font-meta-ui text-on-surface-variant">{lead.date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
                 </div>
               </div>
             </article>
@@ -89,7 +74,7 @@ const longRead = rest[6] ?? null;
                   {side.image && (
                     <div class="my-stack-md">
                       <a href={side.href} class="block overflow-hidden">
-                        <Image src={side.image} class="w-full h-64 object-cover" alt={side.title} />
+                        <img src={side.image} class="w-full h-64 object-cover" alt={side.title} />
                       </a>
                     </div>
                   )}
@@ -131,7 +116,7 @@ const longRead = rest[6] ?? null;
               <article class={`pr-gutter md:article-border-r hover-underline cursor-pointer group py-stack-md${idx === 1 ? " px-gutter" : ""}`}>
                 <a href={story.href} class="mb-stack-md block overflow-hidden">
                   {story.image ? (
-                    <Image src={story.image} class="w-full h-48 object-cover" alt={story.title} />
+                    <img src={story.image} class="w-full h-48 object-cover" alt={story.title} />
                   ) : (
                     <div class="w-full h-48 bg-surface"></div>
                   )}
@@ -161,7 +146,7 @@ const longRead = rest[6] ?? null;
                   <a href={b.href}>
                     <p class="font-meta-ui font-bold leading-tight">{b.title}</p>
                     <span class="text-label-sm text-on-surface-variant">
-                      {formatTime(b.date) || `${b.readingTime} min`}
+                      {b.date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) || `${b.readingTime} min`}
                     </span>
                   </a>
                 </li>
@@ -186,7 +171,7 @@ const longRead = rest[6] ?? null;
                   <a
                     href={longRead.href}
                     class="block w-full h-full min-h-[300px] bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-1000"
-                    style={`background-image: url('${longRead.image.src}')`}
+                    style={`background-image: url('${longRead.image}')`}
                   ></a>
                 ) : (
                   <div class="w-full h-full min-h-[300px] bg-surface"></div>

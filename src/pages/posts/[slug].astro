@@ -1,69 +1,59 @@
 ---
-import { Image } from "astro:assets";
-import { type CollectionEntry, getCollection, render } from "astro:content";
 import Base from "../../layouts/Base.astro";
 import PostCard from "../../components/PostCard.astro";
-import { slugify } from "../../utils/slugify";
-import { getReadingTime } from "../../utils/reading-time";
-import { sortPosts, toPostSummary } from "../../utils/posts";
+import { getPostBySlug, getAllPosts, toPostSummary } from "../../lib/posts-db";
 
-export async function getStaticPaths() {
-	const posts = await getCollection("posts");
-	return posts
-		.filter((post) => !post.data.draft)
-		.map((post) => ({
-			params: { slug: post.id },
-			props: { post },
-		}));
-}
+export const prerender = false;
 
 type Props = {
-	post: CollectionEntry<"posts">;
+	post: Awaited<ReturnType<typeof getPostBySlug>>;
 };
 
 const { post } = Astro.props;
-const { Content } = await render(post);
 
-const readingTime = getReadingTime(post.body);
-const author = post.data.author;
-const tags = (post.data.tags ?? []).map((tag) => ({ slug: slugify(tag), label: tag }));
-const categories = post.data.category
-	? [{ slug: slugify(post.data.category), label: post.data.category }]
+if (!post) {
+	return Astro.redirect("/404");
+}
+
+const tags = post.tags.map((tag) => ({ slug: tag.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label: tag }));
+const categories = post.category
+	? [{ slug: post.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label: post.category }]
 	: [];
 
-const publishDate = post.data.pubDate.toLocaleDateString("en-US", {
+const publishDate = post.pubDate.toLocaleDateString("en-US", {
 	year: "numeric",
 	month: "long",
 	day: "numeric",
 });
 
 const siteUrl = Astro.url.origin;
-const canonical = `${siteUrl}/posts/${post.id}`;
-const description = post.data.excerpt ?? "";
-const ogImage = post.data.heroImage ? new URL(post.data.heroImage.src, Astro.url).href : null;
+const canonical = `${siteUrl}/posts/${post.slug}`;
+const description = post.excerpt ?? "";
+const ogImage = post.heroImage ? new URL(post.heroImage, Astro.url).href : null;
 
 // Fetch a few extra recent posts for "Continue reading"
-const otherPosts = sortPosts(await getCollection("posts"))
-	.filter((p) => p.id !== post.id && !p.data.draft)
-	.slice(0, 3);
+const otherPosts = await getAllPosts()
+	.then((posts) => posts.filter((p) => p.slug !== post.slug))
+	.then((posts) => posts.slice(0, 3));
 const related = otherPosts.map(toPostSummary);
 ---
 
 <Base
-	title={post.data.title}
+	title={post.title}
 	description={description}
 	image={ogImage}
 	canonical={canonical}
 	type="article"
-	publishedTime={post.data.pubDate.toISOString()}
-	modifiedTime={(post.data.updatedDate ?? post.data.pubDate).toISOString()}
-	author={author}
+	publishedTime={post.pubDate.toISOString()}
+	modifiedTime={(post.updatedDate ?? post.pubDate).toISOString()}
+	author={post.author}
+	tags={tags}
 >
-	<article class="article" data-slug={post.id}>
+	<article class="article">
 		{/* Hero: Full-width featured image */}
-		{post.data.heroImage && (
+		{post.heroImage && (
 			<div class="article-hero">
-				<Image src={post.data.heroImage} alt={post.data.title} />
+				<img src={post.heroImage} alt={post.title} />
 			</div>
 		)}
 
@@ -72,13 +62,13 @@ const related = otherPosts.map(toPostSummary);
 			{/* Left gutter: Meta information */}
 			<aside class="article-meta-col">
 				<div class="meta-sticky">
-					{author && (
+					{post.author && (
 						<div class="meta-block byline-block">
 							<span class="meta-label">Author</span>
 							<div class="bylines">
 								<div class="byline">
 									<div class="byline-info">
-										<span class="byline-name">{author}</span>
+										<span class="byline-name">{post.author}</span>
 									</div>
 								</div>
 							</div>
@@ -88,15 +78,11 @@ const related = otherPosts.map(toPostSummary);
 						<span class="meta-label">Published</span>
 						<time class="meta-value">{publishDate}</time>
 					</div>
-				<div class="meta-block">
-					<span class="meta-label">Reading time</span>
-					<span class="meta-value">{readingTime} min</span>
-				</div>
-				<div class="meta-block">
-					<span class="meta-label">Views</span>
-					<span class="meta-value" id="view-count-text">Loading…</span>
-				</div>
-				{tags.length > 0 && (
+					<div class="meta-block">
+						<span class="meta-label">Reading time</span>
+						<span class="meta-value">{post.tags.length} min</span>
+					</div>
+					{tags.length > 0 && (
 						<div class="meta-block">
 							<span class="meta-label">Tags</span>
 							<div class="meta-tags">
@@ -115,27 +101,27 @@ const related = otherPosts.map(toPostSummary);
 			<div class="article-main">
 				<header class="article-header">
 					<div class="article-meta">
-						{author && (
+						{post.author && (
 							<>
-								<span class="article-meta-byline">{author}</span>
+								<span class="article-meta-byline">{post.author}</span>
 								<span class="meta-dot" />
 							</>
 						)}
 						<time>{publishDate}</time>
 						<span class="meta-dot" />
-						<span>{readingTime} min read</span>
+						<span>{post.tags.length} min read</span>
 					</div>
 					{categories[0] && (
 						<a href={`/category/${categories[0].slug}`} class="article-kicker">
 							{categories[0].label}
 						</a>
 					)}
-					<h1 class="article-title">{post.data.title}</h1>
-					{post.data.excerpt && <p class="article-excerpt">{post.data.excerpt}</p>}
+					<h1 class="article-title">{post.title}</h1>
+					{post.excerpt && <p class="article-excerpt">{post.excerpt}</p>}
 				</header>
 
 				<div class="article-content">
-					<Content />
+					{post.html}
 				</div>
 			</div>
 
@@ -241,20 +227,6 @@ const related = otherPosts.map(toPostSummary);
 	</script>
 </Base>
 
-<script>
-	const slug = (document.querySelector(".article") as HTMLElement | null)?.dataset.slug ?? "";
-	const el = document.getElementById("view-count-text");
-	if (el && slug) {
-		fetch(`/api/views/${encodeURIComponent(slug)}`, { method: "POST" })
-			.then((r) => (r.ok ? r.json() : Promise.reject()))
-			.then((data) => {
-				el.textContent = `${(data as { views: number }).views} view${(data as { views: number }).views === 1 ? "" : "s"}`;
-			})
-			.catch(() => {
-				el.textContent = "0 views";
-			});
-	}
-</script>
 
 <style>
 	/* Article container */

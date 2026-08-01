@@ -1,34 +1,22 @@
 ---
-import { getCollection } from "astro:content";
 import Base from "../../layouts/Base.astro";
 import PostCard from "../../components/PostCard.astro";
-import { slugify } from "../../utils/slugify";
-import { sortPosts, toPostSummary } from "../../utils/posts";
+import { getPostsByCategory, getUniqueTags, getAllPosts, toPostSummary } from "../../lib/posts-db";
 
-export async function getStaticPaths() {
-	const posts = await getCollection("posts");
-	const labels = new Set<string>();
-	for (const post of posts) {
-		if (post.data.category) labels.add(post.data.category);
-	}
-	return Array.from(labels).map((label) => ({
-		params: { slug: slugify(label) },
-		props: { label },
-	}));
-}
+export const prerender = false;
 
 type Props = {
 	label: string;
 };
 
 const { label } = Astro.props;
-const posts = sortPosts(await getCollection("posts")).filter(
-	(post) => !post.data.draft && post.data.category === label,
-);
+const posts = await getPostsByCategory(label);
+const allPosts = await getAllPosts();
+const tags = getUniqueTags(allPosts).map((tag) => ({ slug: tag.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label: tag }));
 const summaries = posts.map(toPostSummary);
 ---
 
-<Base title={`${label} posts`} description={`All posts in ${label}`}>
+<Base title={`${label} posts`} description={`All posts in ${label}`} {tags}>
 	<section class="archive-section">
 		<header class="archive-header">
 			<span class="archive-label">Category</span>
@@ -54,7 +42,7 @@ const summaries = posts.map(toPostSummary);
 							readingTime={item.readingTime}
 							tags={item.tags}
 							author={item.author}
-							category={{ slug: slugify(label), label }}
+							category={{ slug: label.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label }}
 						/>
 					))}
 				</div>

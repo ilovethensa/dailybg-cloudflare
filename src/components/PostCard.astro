@@ -5,7 +5,7 @@ import type { ImageMetadata } from "astro";
 interface Props {
 	title: string;
 	excerpt?: string;
-	heroImage?: ImageMetadata;
+	heroImage?: ImageMetadata | string;
 	href: string;
 	date?: Date;
 	readingTime?: number;
@@ -24,13 +24,15 @@ const formattedDate = date
 			day: "numeric",
 		})
 	: null;
+
+const imgSrc = typeof heroImage === "string" ? heroImage : heroImage?.src;
 ---
 
 <article class="post-card">
 	<a href={href} class="card-link">
-		{heroImage ? (
+		{imgSrc ? (
 			<div class="card-image">
-				<Image src={heroImage} alt={title} />
+				<img src={imgSrc} alt={title} />
 			</div>
 		) : (
 			<div class="card-placeholder" />

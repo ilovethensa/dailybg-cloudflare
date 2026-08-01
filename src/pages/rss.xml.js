@@ -1,18 +1,20 @@
-import { getCollection } from 'astro:content';
-import rss from '@astrojs/rss';
-import { SITE_DESCRIPTION, SITE_TITLE } from '../consts';
+import rss from "@astrojs/rss";
+import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+import { getAllPosts } from "../lib/posts-db";
+
+export const prerender = false;
 
 export async function GET(context) {
-	const posts = (await getCollection('posts')).filter((post) => !post.data.draft);
+	const posts = await getAllPosts();
 	return rss({
 		title: SITE_TITLE,
 		description: SITE_DESCRIPTION,
 		site: context.site,
 		items: posts.map((post) => ({
-			title: post.data.title,
-			description: post.data.excerpt,
-			pubDate: post.data.pubDate,
-			link: `/posts/${post.id}/`,
+			title: post.title,
+			description: post.excerpt,
+			pubDate: post.pubDate,
+			link: `/posts/${post.slug}/`,
 		})),
 	});
 }

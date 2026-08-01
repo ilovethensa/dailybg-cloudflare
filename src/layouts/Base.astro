@@ -3,7 +3,6 @@ import { getCollection } from "astro:content";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
 import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
-import { slugify } from "../utils/slugify";
 import "../styles/tokens.css";
 import "../styles/theme.css";
 import "../styles/tailwind.css";
@@ -19,6 +18,7 @@ interface Props {
 	publishedTime?: string | null;
 	modifiedTime?: string | null;
 	author?: string | null;
+	tags?: Array<{ slug: string; label: string }>;
 }
 
 const {
@@ -32,21 +32,12 @@ const {
 	publishedTime,
 	modifiedTime,
 	author,
+	tags = [],
 } = Astro.props;
 
 const siteTitle = SITE_TITLE;
 // If title already includes site title, use as-is
 const fullTitle = title.includes(siteTitle) ? title : `${title} — ${siteTitle}`;
-
-// Tags double as sections in the navbar
-const allPosts = await getCollection("posts");
-const tagMap = new Map<string, string>();
-for (const post of allPosts) {
-	for (const tag of post.data.tags ?? []) {
-		tagMap.set(slugify(tag), tag);
-	}
-}
-const tags = Array.from(tagMap.entries()).map(([slug, label]) => ({ slug, label }));
 
 const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
 ---

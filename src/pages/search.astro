@@ -1,15 +1,13 @@
 ---
-import { getCollection } from "astro:content";
-import Base from "../layouts/Base.astro";
+import { searchPosts } from "../lib/posts-db";
 
-// With content collections the site is static, so search runs client-side:
-// the post index is embedded here and filtered as the user types.
-const posts = (await getCollection("posts")).filter((post) => !post.data.draft);
+export const prerender = false;
 
+const posts = await searchPosts("");
 const searchData = posts.map((post) => ({
-	id: post.id,
-	title: post.data.title,
-	excerpt: post.data.excerpt ?? "",
+	id: post.slug,
+	title: post.title,
+	excerpt: post.excerpt ?? "",
 	body: (post.body ?? "").replace(/[#>*_`~|]/g, " ").replace(/\s+/g, " ").trim(),
 }));
 ---
