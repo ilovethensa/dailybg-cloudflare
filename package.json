@@ -10,7 +10,8 @@
     "build": "wrangler types && astro build",
     "preview": "wrangler types && astro preview",
     "astro": "astro",
-    "db:local:migrate": "wrangler d1 migrations apply dailybg --local"
+    "db:local:migrate": "wrangler d1 migrations apply dailybg --local",
+    "db:local:seed": "wrangler d1 execute dailybg --local --file=scripts/seed-dev.sql"
   },
   "dependencies": {
     "@astrojs/cloudflare": "^14.1.7",
