@@ -134,6 +134,93 @@ export function toPostSummary(post: Post): PostSummary {
 	};
 }
 
+export async function insertPost(post: {
+	slug: string;
+	title: string;
+	body: string;
+	pub_date: number;
+	excerpt?: string;
+	updated_date?: number | null;
+	category?: string;
+	tags?: string[];
+	author?: string;
+	hero_image?: string;
+	draft?: number;
+}): Promise<Post | null> {
+	const db = env.DB;
+	if (!db) return null;
+	await db
+		.prepare(
+			`INSERT INTO posts (slug, title, excerpt, body, pub_date, updated_date, category, tags, author, hero_image, draft)
+			 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`,
+		)
+		.bind(
+			post.slug,
+			post.title,
+			post.excerpt ?? null,
+			post.body,
+			post.pub_date,
+			post.updated_date ?? null,
+			post.category ?? null,
+			JSON.stringify(post.tags ?? []),
+			post.author ?? null,
+			post.hero_image ?? null,
+			post.draft ?? 0,
+		)
+		.run();
+	return getPostBySlug(post.slug);
+}
+
+export async function updatePost(
+	slug: string,
+	updates: {
+		title?: string;
+		body?: string;
+		excerpt?: string;
+		updated_date?: number;
+		category?: string;
+		tags?: string[];
+		author?: string;
+		hero_image?: string;
+		draft?: number;
+	},
+): Promise<Post | null> {
+	const db = env.DB;
+	if (!db) return null;
+	const existing = await db.prepare("SELECT * FROM posts WHERE slug = ?1").bind(slug).first();
+	if (!existing) return null;
+
+	const fields: string[] = [];
+	const values: unknown[] = [];
+	let i = 1;
+
+	if (updates.title !== undefined) { fields.push(`title = ?${++i}`); values.push(updates.title); }
+	if (updates.body !== undefined) { fields.push(`body = ?${++i}`); values.push(updates.body); }
+	if (updates.excerpt !== undefined) { fields.push(`excerpt = ?${++i}`); values.push(updates.excerpt); }
+	if (updates.updated_date !== undefined) { fields.push(`updated_date = ?${++i}`); values.push(updates.updated_date); }
+	if (updates.category !== undefined) { fields.push(`category = ?${++i}`); values.push(updates.category); }
+	if (updates.tags !== undefined) { fields.push(`tags = ?${++i}`); values.push(JSON.stringify(updates.tags)); }
+	if (updates.author !== undefined) { fields.push(`author = ?${++i}`); values.push(updates.author); }
+	if (updates.hero_image !== undefined) { fields.push(`hero_image = ?${++i}`); values.push(updates.hero_image); }
+	if (updates.draft !== undefined) { fields.push(`draft = ?${++i}`); values.push(updates.draft); }
+
+	if (fields.length === 0) return getPostBySlug(slug);
+
+	// Always bump updated_date on edits
+	fields.push(`updated_date = ?${++i}`);
+	values.push(Math.floor(Date.now() / 1000));
+
+	await db.prepare(`UPDATE posts SET ${fields.join(", ")} WHERE slug = ?1`).bind(slug, ...values).run();
+	return getPostBySlug(slug);
+}
+
+export async function deletePost(slug: string): Promise<boolean> {
+	const db = env.DB;
+	if (!db) return false;
+	const result = await db.prepare("DELETE FROM posts WHERE slug = ?1").bind(slug).run();
+	return (result.meta?.changes ?? 0) > 0;
+}
+
 function getReadingTime(markdown: string): number {
 	const WORDS_PER_MINUTE = 200;
 	const CJK_CHARACTERS_PER_MINUTE = 500;
