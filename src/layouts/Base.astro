@@ -12,12 +12,19 @@ interface Props {
 	pageTitle?: string | null;
 	description?: string | null;
 	image?: string | null;
+	imageWidth?: number | null;
+	imageHeight?: number | null;
+	imageAlt?: string | null;
 	canonical?: string | null;
 	robots?: string | null;
 	type?: "website" | "article";
 	publishedTime?: string | null;
 	modifiedTime?: string | null;
 	author?: string | null;
+	twitterImage?: string | null;
+	twitterTitle?: string | null;
+	twitterDescription?: string | null;
+	jsonLd?: Record<string, unknown> | null;
 }
 
 const {
@@ -25,12 +32,19 @@ const {
 	pageTitle,
 	description = SITE_DESCRIPTION,
 	image,
+	imageWidth,
+	imageHeight,
+	imageAlt,
 	canonical,
 	robots,
 	type = "website",
 	publishedTime,
 	modifiedTime,
 	author,
+	twitterImage,
+	twitterTitle,
+	twitterDescription,
+	jsonLd,
 } = Astro.props;
 
 const siteTitle = SITE_TITLE;
@@ -52,7 +66,7 @@ const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
 		<link rel="apple-touch-icon" sizes="180x180" href="/apple-touch-icon.png" />
 		<link rel="manifest" href="/site.webmanifest" />
 		<meta name="theme-color" content="#ffffff" />
-		<link rel="sitemap" href="/sitemap-index.xml" />
+		<link rel="sitemap" href="/sitemap.xml" />
 		<link rel="alternate" type="application/rss+xml" title={siteTitle} href="/rss.xml" />
 		<link rel="canonical" href={canonicalURL} />
 		<title>{fullTitle}</title>
@@ -63,17 +77,27 @@ const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
 		<meta property="og:type" content={type} />
 		<meta property="og:title" content={pageTitle ?? fullTitle} />
 		<meta property="og:description" content={description ?? ""} />
-		<meta property="og:url" content={Astro.url} />
+		<meta property="og:url" content={new URL(Astro.url.pathname, Astro.site).href} />
 		<meta property="og:site_name" content={siteTitle} />
 		{image && <meta property="og:image" content={image} />}
+		{image && imageWidth && <meta property="og:image:width" content={String(imageWidth)} />}
+		{image && imageHeight && <meta property="og:image:height" content={String(imageHeight)} />}
+		{image && <meta property="og:image:alt" content={imageAlt ?? pageTitle ?? fullTitle} />}
 
 		<!-- Twitter -->
 		<meta name="twitter:card" content="summary_large_image" />
+		<meta name="twitter:title" content={twitterTitle ?? pageTitle ?? fullTitle} />
+		<meta name="twitter:description" content={twitterDescription ?? description ?? ""} />
+		{(twitterImage ?? image) && <meta name="twitter:image" content={twitterImage ?? image} />}
 
 		{/* Article metadata */}
 		{publishedTime && <meta property="article:published_time" content={publishedTime} />}
 		{modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
 		{author && <meta property="article:author" content={author} />}
+
+		{jsonLd && (
+			<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
+		)}
 
 		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
