@@ -8,7 +8,7 @@ export const prerender = false;
 const slug = Astro.params.slug;
 const post = slug ? await getPostBySlug(slug) : null;
 
-if (!post) {
+if (!post || post.draft) {
 	return Astro.redirect("/404");
 }
 

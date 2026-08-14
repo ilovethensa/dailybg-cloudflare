@@ -45,7 +45,7 @@ export const POST: APIRoute = async (context) => {
 		tags: tags as string[] | undefined,
 		author: author as string | undefined,
 		hero_image: hero_image as string | undefined,
-		draft: (draft as number) ?? 0,
+		draft: (draft as number) ?? 1,
 	});
 
 	return new Response(JSON.stringify(post), {

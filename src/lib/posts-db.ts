@@ -165,7 +165,7 @@ export async function insertPost(post: {
 			JSON.stringify(post.tags ?? []),
 			post.author ?? null,
 			post.hero_image ?? null,
-			post.draft ?? 0,
+			post.draft ?? 1,
 		)
 		.run();
 	return getPostBySlug(post.slug);
