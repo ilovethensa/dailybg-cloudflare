@@ -14,20 +14,20 @@ const posts = await getPostsByTag(label);
 const summaries = posts.map(toPostSummary);
 ---
 
-<Base title={`Posts tagged "${label}"`} description={`All posts tagged with ${label}`}>
+<Base title={`Публикации с таг "${label}"`} description={`Всички публикации с таг ${label}`}>
 	<section class="archive-section">
 		<header class="archive-header">
-			<span class="archive-label">Tag</span>
+			<span class="archive-label">Таг</span>
 			<h1 class="archive-title">{label}</h1>
 			<p class="archive-count">
 				{summaries.length}
-				{summaries.length === 1 ? "post" : "posts"}
+				{summaries.length === 1 ? "публикация" : summaries.length < 5 ? "публикации" : "публикации"}
 			</p>
 		</header>
 
 		{
 			summaries.length === 0 ? (
-				<p class="no-posts">No posts with this tag yet.</p>
+				<p class="no-posts">Все още няма публикации с този таг.</p>
 			) : (
 				<div class="posts-grid">
 					{summaries.map((item) => (

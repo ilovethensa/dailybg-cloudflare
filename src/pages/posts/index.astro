@@ -8,14 +8,14 @@ const posts = await getAllPosts();
 const summaries = posts.map(toPostSummary);
 
 const formatDate = (date: Date) =>
-	date.toLocaleDateString("en-US", {
+	date.toLocaleDateString("bg-BG", {
 		year: "numeric",
 		month: "long",
 		day: "numeric",
 	});
 
 const formatMonth = (date: Date) =>
-	date.toLocaleDateString("en-US", {
+	date.toLocaleDateString("bg-BG", {
 		year: "numeric",
 		month: "long",
 	});
@@ -53,14 +53,14 @@ const filteredGrouped =
 		: grouped;
 ---
 
-<Base title="All Posts" description="Browse all articles">
+<Base title="Всички публикации" description="Всички статии">
 	<div class="posts-page">
 		<header class="page-header">
-			<span class="page-kicker">Archive</span>
-			<h1 class="page-title">All Posts</h1>
+			<span class="page-kicker">Архив</span>
+			<h1 class="page-title">Всички публикации</h1>
 			<p class="page-description">
 				{posts.length}
-				{posts.length === 1 ? "article" : "articles"}
+				{posts.length === 1 ? "статия" : posts.length < 5 ? "статии" : "статии"}
 			</p>
 			{years.length > 1 && (
 				<div class="year-filter">
@@ -69,7 +69,7 @@ const filteredGrouped =
 						class:active={selectedYear === null}
 						data-year="all"
 					>
-						All
+						Всички
 					</button>
 					{years.map((year) => (
 						<a
@@ -86,7 +86,7 @@ const filteredGrouped =
 
 		{
 			filteredGrouped.length === 0 ? (
-				<p class="empty">No posts for this year.</p>
+				<p class="empty">Няма публикации за тази година.</p>
 			) : (
 				<div class="posts-list">
 					{filteredGrouped.map((group) => (
@@ -106,8 +106,8 @@ const filteredGrouped =
 										<h3 class="post-title">{item.title}</h3>
 										{item.excerpt && <p class="post-excerpt">{item.excerpt}</p>}
 										<div class="post-meta">
-											{item.author && <span class="post-byline">By {item.author}</span>}
-											<span>{item.readingTime} min read</span>
+											{item.author && <span class="post-byline">{item.author}</span>}
+											<span>{item.readingTime} мин четене</span>
 										</div>
 									</a>
 									{item.tags.length > 0 && (

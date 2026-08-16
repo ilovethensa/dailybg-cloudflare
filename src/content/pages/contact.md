@@ -1,16 +1,14 @@
 ---
-title: 'Contact'
-description: 'Get in touch with the dailyBG team.'
+title: 'Контакти'
+description: 'Свържете се с екипа на dailyBG.'
 ---
 
-This is the Contact page for dailyBG.
+## Свържете се с нас
 
-## Get in touch
-
-Have a question, feedback, or just want to say hello? Reach out to us.
+Имате въпрос, обратна връзка или просто искате да кажете здравейте? Свържете се с нас.
 
 - **TikTok:** [@dailybgnews](https://tiktok.com/@dailybgnews)
 - **Facebook:** [Dailybg](https://www.facebook.com/people/Dailybg/61587644461517/)
-- **Email:** [contact@dailybg.org](mailto:contact@dailybg.org)
+- **Имейл:** [contact@dailybg.org](mailto:contact@dailybg.org)
 
-We read every message and will get back to you as soon as possible.
+Прочитаме всяко съобщение и ще ви отговорим възможно най-скоро.

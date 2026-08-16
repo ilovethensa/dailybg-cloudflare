@@ -17,7 +17,7 @@ const categories = post.category
 	? [{ slug: post.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label: post.category }]
 	: [];
 
-const publishDate = post.pubDate.toLocaleDateString("en-US", {
+const publishDate = post.pubDate.toLocaleDateString("bg-BG", {
 	year: "numeric",
 	month: "long",
 	day: "numeric",
@@ -80,7 +80,7 @@ const related = otherPosts.map(toPostSummary);
 				<div class="meta-sticky">
 					{post.author && (
 						<div class="meta-block byline-block">
-							<span class="meta-label">Author</span>
+							<span class="meta-label">Автор</span>
 							<div class="bylines">
 								<div class="byline">
 									<div class="byline-info">
@@ -91,16 +91,16 @@ const related = otherPosts.map(toPostSummary);
 						</div>
 					)}
 					<div class="meta-block">
-						<span class="meta-label">Published</span>
+						<span class="meta-label">Публикувано</span>
 						<time class="meta-value">{publishDate}</time>
 					</div>
 				<div class="meta-block">
-					<span class="meta-label">Reading time</span>
-					<span class="meta-value">{post.readingTime} min</span>
+					<span class="meta-label">Време за четене</span>
+					<span class="meta-value">{post.readingTime} мин</span>
 				</div>
 					{tags.length > 0 && (
 						<div class="meta-block">
-							<span class="meta-label">Tags</span>
+							<span class="meta-label">Тагове</span>
 							<div class="meta-tags">
 								{tags.map((t) => (
 									<a href={`/tag/${t.slug}`} class="meta-tag">
@@ -125,7 +125,7 @@ const related = otherPosts.map(toPostSummary);
 						)}
 						<time>{publishDate}</time>
 						<span class="meta-dot" />
-						<span>{post.readingTime} min read</span>
+						<span>{post.readingTime} мин четене</span>
 					</div>
 					{categories[0] && (
 						<a href={`/category/${categories[0].slug}`} class="article-kicker">
@@ -143,7 +143,7 @@ const related = otherPosts.map(toPostSummary);
 			<aside class="article-sidebar">
 				<div class="sidebar-sticky">
 					<nav class="toc" aria-label="Table of contents">
-						<h4 class="toc-title">On this page</h4>
+						<h4 class="toc-title">В тази статия</h4>
 						<div class="toc-content" id="toc-content">
 							<!-- Populated by JS -->
 						</div>
@@ -156,7 +156,7 @@ const related = otherPosts.map(toPostSummary);
 	{related.length > 0 && (
 		<section class="more-posts">
 			<div class="more-inner">
-				<h2 class="more-title">Continue reading</h2>
+				<h2 class="more-title">Продължете да четете</h2>
 				<div class="more-grid">
 					{related.map((item) => (
 						<PostCard

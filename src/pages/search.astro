@@ -13,27 +13,27 @@ const searchData = posts.map((post) => ({
 }));
 ---
 
-<Base title="Search" description="Search blog posts" robots="noindex, nofollow">
+<Base title="Търсене" description="Търсене в блог публикациите" robots="noindex, nofollow">
 	<section class="search-page">
-		<h1 class="search-title">Search</h1>
+		<h1 class="search-title">Търсене</h1>
 
 		<form method="get" action="/search" class="search-form">
 			<input
 				type="search"
 				name="q"
 				id="search-input"
-				placeholder="Search posts..."
+				placeholder="Търсене на публикации..."
 				class="search-input"
 				autocomplete="off"
 			/>
-			<button type="submit" class="search-button">Search</button>
+			<button type="submit" class="search-button">Търсене</button>
 		</form>
 
 		<p class="search-summary" id="search-summary"></p>
 
 		<ol class="search-results" id="search-results"></ol>
 
-		<p class="search-hint" id="search-hint">Enter a search term to find posts.</p>
+		<p class="search-hint" id="search-hint">Въведете търсене, за да намерите публикации.</p>
 	</section>
 
 	<script type="application/json" id="search-data" set:html={JSON.stringify(searchData).replace(/</g, "\\u003c")} />
@@ -96,8 +96,8 @@ const searchData = posts.map((post) => ({
 
 			summary.textContent =
 				matches.length === 0
-					? `No results for "${q}"`
-					: `${matches.length} result${matches.length === 1 ? "" : "s"} for "${q}"`;
+					? `Няма резултати за "${q}"`
+					: `${matches.length} резултат${matches.length === 1 ? "" : matches.length < 5 ? "а" : ""} за "${q}"`;
 
 			results.innerHTML = matches
 				.map((p) => {

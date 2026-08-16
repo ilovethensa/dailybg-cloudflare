@@ -39,8 +39,8 @@ const jsonLd = {
 
   {items.length === 0 ? (
     <section class="empty-state py-12 text-center">
-      <h2 class="text-2xl mb-2">No posts yet</h2>
-      <p class="text-on-surface-variant mb-4">Add posts to the D1 database to see them here.</p>
+      <h2 class="text-2xl mb-2">Все още няма публикации</h2>
+      <p class="text-on-surface-variant mb-4">Добавете публикации в D1 базата данни, за да ги видите тук.</p>
     </section>
   ) : (
     <div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop bg-surface-bright text-primary">
@@ -57,16 +57,16 @@ const jsonLd = {
               </a>
               <div class="flex flex-col gap-2">
                 <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                  {lead.category?.label ?? "Featured"} • {lead.readingTime} Min Read
+                  {lead.category?.label ?? "Избрани"} • {lead.readingTime} мин четене
                 </span>
                 <h2 class="font-headline-xl text-headline-xl headline-text leading-tight">
                   <a href={lead.href}>{lead.title}</a>
                 </h2>
                 {lead.excerpt && <p class="font-article-body text-secondary mt-stack-sm max-w-2xl text-meta-ui">{lead.excerpt}</p>}
                 <div class="mt-4 flex items-center gap-2">
-                  {lead.author && <span class="font-meta-ui font-bold">By {lead.author}</span>}
+                  {lead.author && <span class="font-meta-ui font-bold">{lead.author}</span>}
                   <span class="text-outline">•</span>
-                  <span class="font-meta-ui text-on-surface-variant">{lead.date.toLocaleDateString("en-US", { year: "numeric", month: "long", day: "numeric" })}</span>
+                  <span class="font-meta-ui text-on-surface-variant">{lead.date.toLocaleDateString("bg-BG", { year: "numeric", month: "long", day: "numeric" })}</span>
                 </div>
               </div>
             </article>
@@ -77,7 +77,7 @@ const jsonLd = {
               <div class="flex flex-col h-full justify-between">
                 <div>
                   <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                    {side.category?.label ?? "Policy"} • {side.tags[0]?.label ?? "Dispatch"}
+                    {side.category?.label ?? "Политика"} • {side.tags[0]?.label ?? "Изпратено"}
                   </span>
                   <h3 class="font-headline-lg text-headline-lg headline-text mt-2 leading-snug">
                     <a href={side.href}>{side.title}</a>
@@ -92,7 +92,7 @@ const jsonLd = {
                   {side.excerpt && <p class="font-meta-ui text-on-surface-variant leading-relaxed">{side.excerpt}</p>}
                 </div>
                 <div class="mt-stack-lg pt-stack-md border-t border-outline-variant">
-                  {side.author && <span class="font-meta-ui font-bold">By {side.author}</span>}
+                  {side.author && <span class="font-meta-ui font-bold">{side.author}</span>}
                 </div>
               </div>
             </article>
@@ -107,7 +107,7 @@ const jsonLd = {
               <article class="md:pl-gutter hover-underline cursor-pointer py-stack-md">
                 <div class="flex flex-col justify-center h-full">
                   <span class="text-label-sm font-label-sm text-error uppercase font-bold">
-                    {story.category?.label ?? story.tags[0]?.label ?? "Economy Analysis"}
+                    {story.category?.label ?? story.tags[0]?.label ?? "Икономически анализ"}
                   </span>
                   <h4 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg headline-text mt-2 leading-snug">
                     <a href={story.href}>{story.title}</a>
@@ -133,7 +133,7 @@ const jsonLd = {
                   )}
                 </a>
                 <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                  {story.category?.label ?? story.tags[0]?.label ?? "Story"}
+                   {story.category?.label ?? story.tags[0]?.label ?? "История"}
                 </span>
                 <h4 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg headline-text mt-2 leading-snug">
                   <a href={story.href}>{story.title}</a>
@@ -150,14 +150,14 @@ const jsonLd = {
         <!-- Briefs & Long Read -->
         <section class="grid grid-cols-1 md:grid-cols-4 gap-gutter py-stack-md">
           <div class="col-span-1">
-            <h5 class="text-label-sm font-label-sm uppercase border-b border-primary pb-2 mb-stack-md">The Briefing</h5>
+            <h5 class="text-label-sm font-label-sm uppercase border-b border-primary pb-2 mb-stack-md">Брифинг</h5>
             <ul class="flex flex-col gap-stack-md">
               {briefing.map((b) => (
                 <li class="hover:opacity-70 transition-opacity cursor-pointer">
                   <a href={b.href}>
                     <p class="font-meta-ui font-bold leading-tight">{b.title}</p>
                     <span class="text-label-sm text-on-surface-variant">
-                      {b.date.toLocaleTimeString("en-US", { hour: "numeric", minute: "2-digit" }) || `${b.readingTime} min`}
+                      {b.date.toLocaleTimeString("bg-BG", { hour: "numeric", minute: "2-digit" }) || `${b.readingTime} мин`}
                     </span>
                   </a>
                 </li>
@@ -168,13 +168,13 @@ const jsonLd = {
           {longRead && (
             <article class="md:col-span-3 flex flex-col md:flex-row gap-gutter group cursor-pointer border-l border-outline-variant md:pl-gutter">
               <div class="md:w-1/2">
-                <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Long Read</span>
+                <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Дълго четене</span>
                 <h4 class="font-headline-xl text-headline-lg-mobile md:text-headline-lg headline-text mt-2">
                   <a href={longRead.href}>{longRead.title}</a>
                 </h4>
                 {longRead.excerpt && <p class="font-meta-ui text-on-surface-variant mt-4 leading-relaxed">{longRead.excerpt}</p>}
                 <div class="mt-4">
-                  <a href={longRead.href} class="font-meta-ui font-bold underline">Read the special report →</a>
+                  <a href={longRead.href} class="font-meta-ui font-bold underline">Прочетете специалния доклад →</a>
                 </div>
               </div>
               <div class="md:w-1/2 bg-surface-container overflow-hidden">

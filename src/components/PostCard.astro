@@ -19,7 +19,7 @@ interface Props {
 const { title, excerpt, heroImage, href, date, readingTime, tags, author, category } = Astro.props;
 
 const formattedDate = date
-	? date.toLocaleDateString("en-US", {
+	? date.toLocaleDateString("bg-BG", {
 			year: "numeric",
 			month: "short",
 			day: "numeric",
@@ -55,7 +55,7 @@ const imgSrc = typeof heroImage === "string" ? heroImage : heroImage?.src;
 				{readingTime && (
 					<>
 						<span class="meta-dot" />
-						<span>{readingTime} min</span>
+						<span>{readingTime} мин</span>
 					</>
 				)}
 			</div>
