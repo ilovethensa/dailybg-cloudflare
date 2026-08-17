@@ -12,11 +12,9 @@ interface Props {
 	readingTime?: number;
 	tags?: Array<{ slug: string; label: string }>;
 	author?: string;
-	/** News-style section label rendered above the title */
-	category?: { slug: string; label: string } | null;
 }
 
-const { title, excerpt, heroImage, href, date, readingTime, tags, author, category } = Astro.props;
+const { title, excerpt, heroImage, href, date, readingTime, tags, author } = Astro.props;
 
 const formattedDate = date
 	? date.toLocaleDateString("bg-BG", {
@@ -39,11 +37,6 @@ const imgSrc = typeof heroImage === "string" ? heroImage : heroImage?.src;
 			<div class="card-placeholder" />
 		)}
 		<div class="card-body">
-			{category && (
-				<a href={`/category/${category.slug}`} class="card-kicker">
-					{category.label}
-				</a>
-			)}
 			<div class="card-meta">
 				{formattedDate && <time class="card-date">{formattedDate}</time>}
 				{author && (
@@ -114,22 +107,6 @@ const imgSrc = typeof heroImage === "string" ? heroImage : heroImage?.src;
 
 	.card-body {
 		flex: 1;
-	}
-
-	.card-kicker {
-		display: inline-block;
-		font-size: var(--font-size-xs);
-		font-weight: 600;
-		text-transform: uppercase;
-		letter-spacing: var(--tracking-wider);
-		color: var(--color-brand);
-		text-decoration: none;
-		margin-bottom: var(--spacing-2);
-		transition: color var(--transition-fast);
-	}
-
-	.card-kicker:hover {
-		color: var(--color-brand-hover);
 	}
 
 	.card-meta {

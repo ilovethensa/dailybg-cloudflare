@@ -96,11 +96,6 @@ const filteredGrouped =
 								<article class="post-item">
 									<a href={item.href} class="post-link">
 										<div class="post-topline">
-											{item.category && (
-												<a href={`/category/${item.category.slug}`} class="post-kicker">
-													{item.category.label}
-												</a>
-											)}
 											<time class="post-date">{formatDate(item.date)}</time>
 										</div>
 										<h3 class="post-title">{item.title}</h3>

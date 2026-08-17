@@ -47,17 +47,16 @@ export const PUT: APIRoute = async (context) => {
 		});
 	}
 
-	const { title, body: content, excerpt, category, tags, author, hero_image, draft } = body as Record<string, unknown>;
+	const { title, body: content, excerpt, tags, author, hero_image, draft } = body as Record<string, unknown>;
 
 	const post = await updatePost(slug, {
 		title: title as string | undefined,
 		body: content as string | undefined,
 		excerpt: excerpt as string | undefined,
-		category: category as string | undefined,
 		tags: tags as string[] | undefined,
 		author: author as string | undefined,
-		hero_image: hero_image as string | undefined,
-		draft: draft as number | undefined,
+		heroImage: hero_image as string | undefined,
+		draft: draft === undefined ? undefined : Boolean(draft),
 	});
 
 	if (!post) {

@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getAllPosts, getUniqueTags, getUniqueCategories } from "../lib/posts-db";
+import { getAllPosts, getUniqueTags } from "../lib/posts-db";
 
 export const prerender = false;
 
@@ -8,7 +8,6 @@ export const GET: APIRoute = async ({ site }) => {
 
 	const posts = await getAllPosts();
 	const tags = getUniqueTags(posts);
-	const categories = getUniqueCategories(posts);
 
 	const postUrls = posts.map(
 		(post) => `  <url>
@@ -23,15 +22,6 @@ export const GET: APIRoute = async ({ site }) => {
 		const slug = tag.toLowerCase().replace(/[^a-z0-9]+/g, "-");
 		return `  <url>
     <loc>${baseUrl}/tag/${slug}</loc>
-    <changefreq>weekly</changefreq>
-    <priority>0.4</priority>
-  </url>`;
-	});
-
-	const categoryUrls = categories.map((cat) => {
-		const slug = cat.toLowerCase().replace(/[^a-z0-9]+/g, "-");
-		return `  <url>
-    <loc>${baseUrl}/category/${slug}</loc>
     <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>`;
@@ -55,7 +45,6 @@ export const GET: APIRoute = async ({ site }) => {
 ${staticUrls.join("\n")}
 ${postUrls.join("\n")}
 ${tagUrls.join("\n")}
-${categoryUrls.join("\n")}
 </urlset>`;
 
 	return new Response(xml, {

@@ -13,9 +13,6 @@ if (!post || post.draft) {
 }
 
 const tags = post.tags.map((tag) => ({ slug: tag.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label: tag }));
-const categories = post.category
-	? [{ slug: post.category.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label: post.category }]
-	: [];
 
 const publishDate = post.pubDate.toLocaleDateString("bg-BG", {
 	year: "numeric",
@@ -125,14 +122,9 @@ const related = otherPosts.map(toPostSummary);
 						)}
 						<time>{publishDate}</time>
 						<span class="meta-dot" />
-						<span>{post.readingTime} мин четене</span>
-					</div>
-					{categories[0] && (
-						<a href={`/category/${categories[0].slug}`} class="article-kicker">
-							{categories[0].label}
-						</a>
-					)}
-					<h1 class="article-title">{post.title}</h1>
+					<span>{post.readingTime} мин четене</span>
+				</div>
+				<h1 class="article-title">{post.title}</h1>
 					{post.excerpt && <p class="article-excerpt">{post.excerpt}</p>}
 				</header>
 
@@ -168,7 +160,6 @@ const related = otherPosts.map(toPostSummary);
 							readingTime={item.readingTime}
 							tags={item.tags}
 							author={item.author}
-							category={item.category}
 						/>
 					))}
 				</div>

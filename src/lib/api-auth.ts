@@ -8,7 +8,7 @@ export function verifyApiKey(context: APIContext): boolean {
 }
 
 export function unauthorized(): Response {
-	return new Response(JSON.stringify({ error: "Unauthorized" }), {
+	return new Response(JSON.stringify({ error: "Unauthorized", code: "UNAUTHORIZED" }), {
 		status: 401,
 		headers: { "Content-Type": "application/json" },
 	});

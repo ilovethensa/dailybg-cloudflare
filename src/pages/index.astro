@@ -57,7 +57,7 @@ const jsonLd = {
               </a>
               <div class="flex flex-col gap-2">
                 <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                  {lead.category?.label ?? "Избрани"} • {lead.readingTime} мин четене
+                  {lead.tags[0]?.label ?? "Избрани"} • {lead.readingTime} мин четене
                 </span>
                 <h2 class="font-headline-xl text-headline-xl headline-text leading-tight">
                   <a href={lead.href}>{lead.title}</a>
@@ -77,7 +77,7 @@ const jsonLd = {
               <div class="flex flex-col h-full justify-between">
                 <div>
                   <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                    {side.category?.label ?? "Политика"} • {side.tags[0]?.label ?? "Изпратено"}
+                    {"Политика"} • {side.tags[0]?.label ?? "Изпратено"}
                   </span>
                   <h3 class="font-headline-lg text-headline-lg headline-text mt-2 leading-snug">
                     <a href={side.href}>{side.title}</a>
@@ -107,7 +107,7 @@ const jsonLd = {
               <article class="md:pl-gutter hover-underline cursor-pointer py-stack-md">
                 <div class="flex flex-col justify-center h-full">
                   <span class="text-label-sm font-label-sm text-error uppercase font-bold">
-                    {story.category?.label ?? story.tags[0]?.label ?? "Икономически анализ"}
+                     {story.tags[0]?.label ?? "Икономически анализ"}
                   </span>
                   <h4 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg headline-text mt-2 leading-snug">
                     <a href={story.href}>{story.title}</a>
@@ -133,7 +133,7 @@ const jsonLd = {
                   )}
                 </a>
                 <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                   {story.category?.label ?? story.tags[0]?.label ?? "История"}
+                   {story.tags[0]?.label ?? "История"}
                 </span>
                 <h4 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg headline-text mt-2 leading-snug">
                   <a href={story.href}>{story.title}</a>

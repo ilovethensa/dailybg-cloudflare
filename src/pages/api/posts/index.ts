@@ -1,5 +1,5 @@
 import type { APIRoute } from "astro";
-import { getAllPosts, insertPost } from "../../../lib/posts-db";
+import { getAllPosts, createPost } from "../../../lib/posts-db";
 import { verifyApiKey, unauthorized } from "../../../lib/api-auth";
 
 export const prerender = false;
@@ -24,7 +24,7 @@ export const POST: APIRoute = async (context) => {
 		});
 	}
 
-	const { slug, title, body: content, excerpt, category, tags, author, hero_image, draft } = body as Record<string, unknown>;
+	const { slug, title, body: content, excerpt, tags, author, hero_image, draft } = body as Record<string, unknown>;
 
 	if (!slug || !title || !content) {
 		return new Response(JSON.stringify({ error: "slug, title, and body are required" }), {
@@ -33,19 +33,15 @@ export const POST: APIRoute = async (context) => {
 		});
 	}
 
-	const pub_date = Math.floor(Date.now() / 1000);
-
-	const post = await insertPost({
+	const post = await createPost({
 		slug: slug as string,
 		title: title as string,
 		body: content as string,
-		pub_date,
 		excerpt: excerpt as string | undefined,
-		category: category as string | undefined,
 		tags: tags as string[] | undefined,
 		author: author as string | undefined,
-		hero_image: hero_image as string | undefined,
-		draft: (draft as number) ?? 1,
+		heroImage: hero_image as string | undefined,
+		draft: draft === undefined ? undefined : Boolean(draft),
 	});
 
 	return new Response(JSON.stringify(post), {
