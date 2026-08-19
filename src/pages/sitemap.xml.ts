@@ -1,5 +1,7 @@
 import type { APIRoute } from "astro";
+import { getCollection } from "astro:content";
 import { getAllPosts, getUniqueTags } from "../lib/posts-db";
+import { tagToSlug } from "../lib/slugs";
 
 export const prerender = false;
 
@@ -8,21 +10,20 @@ export const GET: APIRoute = async ({ site }) => {
 
 	const posts = await getAllPosts();
 	const tags = getUniqueTags(posts);
+	const pages = await getCollection("pages");
 
 	const postUrls = posts.map(
 		(post) => `  <url>
     <loc>${baseUrl}/posts/${post.slug}</loc>
     <lastmod>${(post.updatedDate ?? post.pubDate).toISOString().split("T")[0]}</lastmod>
-    <changefreq>monthly</changefreq>
     <priority>0.8</priority>
   </url>`
 	);
 
-	const tagUrls = tags.map((tag) => {
-		const slug = tag.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+	const tagUrls = [...new Set(tags)].map((tag) => {
+		const slug = tagToSlug(tag);
 		return `  <url>
     <loc>${baseUrl}/tag/${slug}</loc>
-    <changefreq>weekly</changefreq>
     <priority>0.4</priority>
   </url>`;
 	});
@@ -30,14 +31,18 @@ export const GET: APIRoute = async ({ site }) => {
 	const staticUrls = [
 		`  <url>
     <loc>${baseUrl}/</loc>
-    <changefreq>daily</changefreq>
     <priority>1.0</priority>
   </url>`,
 		`  <url>
     <loc>${baseUrl}/posts</loc>
-    <changefreq>daily</changefreq>
     <priority>0.7</priority>
   </url>`,
+		...pages.map(
+			(page) => `  <url>
+    <loc>${baseUrl}/pages/${page.id}/</loc>
+    <priority>0.5</priority>
+  </url>`
+		),
 	];
 
 	const xml = `<?xml version="1.0" encoding="UTF-8"?>

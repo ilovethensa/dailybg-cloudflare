@@ -2,7 +2,7 @@
 import { getCollection } from "astro:content";
 import Footer from "../components/Footer.astro";
 import Header from "../components/Header.astro";
-import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+import { SITE_DESCRIPTION, SITE_IMAGE, SITE_TITLE } from "../consts";
 import "../styles/tokens.css";
 import "../styles/theme.css";
 import "../styles/tailwind.css";
@@ -31,7 +31,7 @@ const {
 	title,
 	pageTitle,
 	description = SITE_DESCRIPTION,
-	image,
+	image = SITE_IMAGE,
 	imageWidth,
 	imageHeight,
 	imageAlt,
@@ -52,6 +52,9 @@ const siteTitle = SITE_TITLE;
 const fullTitle = title.includes(siteTitle) ? title : `${title} — ${siteTitle}`;
 
 const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
+
+// Social scrapers require absolute image URLs; resolve relative paths against the site root.
+const absoluteImage = image ? new URL(image, Astro.site).href : null;
 ---
 
 <!doctype html>
@@ -75,20 +78,21 @@ const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
 
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content={type} />
+		<meta property="og:locale" content="bg_BG" />
 		<meta property="og:title" content={pageTitle ?? fullTitle} />
 		<meta property="og:description" content={description ?? ""} />
 		<meta property="og:url" content={new URL(Astro.url.pathname, Astro.site).href} />
 		<meta property="og:site_name" content={siteTitle} />
-		{image && <meta property="og:image" content={image} />}
-		{image && imageWidth && <meta property="og:image:width" content={String(imageWidth)} />}
-		{image && imageHeight && <meta property="og:image:height" content={String(imageHeight)} />}
-		{image && <meta property="og:image:alt" content={imageAlt ?? pageTitle ?? fullTitle} />}
+		{absoluteImage && <meta property="og:image" content={absoluteImage} />}
+		{absoluteImage && imageWidth && <meta property="og:image:width" content={String(imageWidth)} />}
+		{absoluteImage && imageHeight && <meta property="og:image:height" content={String(imageHeight)} />}
+		{absoluteImage && <meta property="og:image:alt" content={imageAlt ?? pageTitle ?? fullTitle} />}
 
 		<!-- Twitter -->
 		<meta name="twitter:card" content="summary_large_image" />
 		<meta name="twitter:title" content={twitterTitle ?? pageTitle ?? fullTitle} />
 		<meta name="twitter:description" content={twitterDescription ?? description ?? ""} />
-		{(twitterImage ?? image) && <meta name="twitter:image" content={twitterImage ?? image} />}
+		{(twitterImage ?? absoluteImage) && <meta name="twitter:image" content={twitterImage ?? absoluteImage} />}
 
 		{/* Article metadata */}
 		{publishedTime && <meta property="article:published_time" content={publishedTime} />}

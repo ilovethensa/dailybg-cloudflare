@@ -1,16 +1,20 @@
 ---
 import Base from "../../layouts/Base.astro";
 import PostCard from "../../components/PostCard.astro";
-import { getPostsByTag, toPostSummary } from "../../lib/posts-db";
+import { getPostsByTagSlug, toPostSummary } from "../../lib/posts-db";
+import { tagToSlug } from "../../lib/slugs";
 
 export const prerender = false;
 
-type Props = {
-	label: string;
-};
+const tagSlug = Astro.params.slug ?? "";
 
-const { label } = Astro.props;
-const posts = await getPostsByTag(label);
+const posts = await getPostsByTagSlug(tagSlug);
+
+if (posts.length === 0) {
+	return Astro.redirect("/404");
+}
+
+const label = posts[0].tags.find((t) => tagToSlug(t) === tagSlug) ?? tagSlug;
 const summaries = posts.map(toPostSummary);
 ---
 

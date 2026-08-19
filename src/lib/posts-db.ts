@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { marked } from "marked";
+import { tagToSlug } from "./slugs";
 
 export type Post = {
 	slug: string;
@@ -99,6 +100,19 @@ export async function getPostsByTag(tag: string): Promise<Post[]> {
 	return (results ?? []).map(rowToPost);
 }
 
+/** Find posts whose tags slugify to the given URL slug (handles Cyrillic tags). */
+export async function getPostsByTagSlug(slug: string): Promise<Post[]> {
+	const db = env.DB;
+	if (!db) return [];
+	const { results } = await db
+		.prepare("SELECT * FROM posts WHERE draft = 0 ORDER BY pub_date DESC")
+		.all<Record<string, unknown>>();
+	const wanted = tagToSlug(slug);
+	return (results ?? [])
+		.map(rowToPost)
+		.filter((post) => post.tags.some((tag) => tagToSlug(tag) === wanted));
+}
+
 export async function searchPosts(query: string): Promise<Post[]> {
 	const db = env.DB;
 	if (!db) return [];
@@ -140,7 +154,7 @@ export function toPostSummary(post: Post): PostSummary {
 		title: post.title,
 		excerpt: post.excerpt,
 		image: post.heroImage ?? undefined,
-		tags: post.tags.map((tag) => ({ slug: tag.toLowerCase().replace(/[^a-z0-9]+/g, "-"), label: tag })),
+		tags: post.tags.map((tag) => ({ slug: tagToSlug(tag), label: tag })),
 		readingTime: getReadingTime(post.body),
 		author: post.author ?? undefined,
 		date: post.pubDate,

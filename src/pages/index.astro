@@ -29,6 +29,8 @@ const jsonLd = {
 ---
 
 <Base title={SITE_TITLE} description={SITE_DESCRIPTION} jsonLd={jsonLd}>
+  <!-- Visually hidden site heading so the page has exactly one h1 -->
+  <h1 class="sr-only">{SITE_TITLE}</h1>
   <!-- Micro-styles from target -->
   <style>
     .article-border-b { border-bottom: 1px solid #e0e0e0; }
@@ -50,7 +52,7 @@ const jsonLd = {
             <article class="md:col-span-8 md:pr-gutter hover-underline cursor-pointer group py-stack-md">
               <a href={lead.href} class="mb-stack-md overflow-hidden block">
                 {lead.image ? (
-                  <img src={lead.image} class="w-full h-[300px] md:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" alt={lead.title} />
+                  <img src={lead.image} class="w-full h-[300px] md:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" alt={lead.title} width="1920" height="1080" fetchpriority="high" />
                   ) : (
                     <div class="w-full h-[300px] md:h-[500px] bg-surface"></div>
                   )}
@@ -85,7 +87,7 @@ const jsonLd = {
                   {side.image && (
                     <div class="my-stack-md">
                       <a href={side.href} class="block overflow-hidden">
-                        <img src={side.image} class="w-full h-40 md:h-64 object-cover" alt={side.title} />
+                        <img src={side.image} class="w-full h-40 md:h-64 object-cover" alt={side.title} width="1920" height="1080" loading="lazy" />
                       </a>
                     </div>
                   )}
@@ -127,7 +129,7 @@ const jsonLd = {
               <article class={`md:pr-gutter md:article-border-r hover-underline cursor-pointer group py-stack-md${idx === 1 ? " md:px-gutter" : ""}`}>
                 <a href={story.href} class="mb-stack-md block overflow-hidden">
                   {story.image ? (
-                    <img src={story.image} class="w-full h-40 md:h-48 object-cover" alt={story.title} />
+                    <img src={story.image} class="w-full h-40 md:h-48 object-cover" alt={story.title} width="1920" height="1080" loading="lazy" />
                   ) : (
                     <div class="w-full h-40 md:h-48 bg-surface"></div>
                   )}

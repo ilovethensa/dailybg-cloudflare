@@ -6,7 +6,7 @@ export const prerender = false;
 
 export async function GET(context) {
 	const posts = await getAllPosts();
-	return rss({
+	const body = rss({
 		title: SITE_TITLE,
 		description: SITE_DESCRIPTION,
 		site: context.site,
@@ -17,4 +17,11 @@ export async function GET(context) {
 			link: `/posts/${post.slug}`,
 		})),
 	});
+	const response = new Response(body.body, {
+		headers: {
+			"Content-Type": "application/rss+xml; charset=utf-8",
+			"Cache-Control": "public, max-age=1800",
+		},
+	});
+	return response;
 }
