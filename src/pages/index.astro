@@ -61,7 +61,7 @@ const jsonLd = {
                 <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
                   {lead.tags[0]?.label ?? "Избрани"} • {lead.readingTime} мин четене
                 </span>
-                <h2 class="font-headline-xl text-headline-xl headline-text leading-tight overflow-wrap-anywhere md:overflow-wrap-normal">
+                <h2 class="font-headline-xl text-headline-xl headline-text leading-tight wrap-anywhere md:wrap-normal">
                   <a href={lead.href}>{lead.title}</a>
                 </h2>
                 {lead.excerpt && <p class="font-article-body text-secondary mt-stack-sm max-w-2xl text-meta-ui">{lead.excerpt}</p>}
