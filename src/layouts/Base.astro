@@ -21,6 +21,9 @@ interface Props {
 	publishedTime?: string | null;
 	modifiedTime?: string | null;
 	author?: string | null;
+	articleSection?: string | null;
+	articleTags?: string[] | null;
+	twitterSite?: string | null;
 	twitterImage?: string | null;
 	twitterTitle?: string | null;
 	twitterDescription?: string | null;
@@ -41,6 +44,9 @@ const {
 	publishedTime,
 	modifiedTime,
 	author,
+	articleSection,
+	articleTags,
+	twitterSite,
 	twitterImage,
 	twitterTitle,
 	twitterDescription,
@@ -90,6 +96,7 @@ const absoluteImage = image ? new URL(image, Astro.site).href : null;
 
 		<!-- Twitter -->
 		<meta name="twitter:card" content="summary_large_image" />
+		{twitterSite && <meta name="twitter:site" content={twitterSite} />}
 		<meta name="twitter:title" content={twitterTitle ?? pageTitle ?? fullTitle} />
 		<meta name="twitter:description" content={twitterDescription ?? description ?? ""} />
 		{(twitterImage ?? absoluteImage) && <meta name="twitter:image" content={twitterImage ?? absoluteImage} />}
@@ -98,17 +105,15 @@ const absoluteImage = image ? new URL(image, Astro.site).href : null;
 		{publishedTime && <meta property="article:published_time" content={publishedTime} />}
 		{modifiedTime && <meta property="article:modified_time" content={modifiedTime} />}
 		{author && <meta property="article:author" content={author} />}
+		{articleSection && <meta property="article:section" content={articleSection} />}
+		{articleTags?.map((tag) => <meta property="article:tag" content={tag} />)}
 
 		{jsonLd && (
 			<script type="application/ld+json" set:html={JSON.stringify(jsonLd)} />
 		)}
 
-		<link rel="preconnect" href="https://fonts.googleapis.com" />
 		<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-		<link
-			href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&family=Libre+Caslon+Text:ital,wght@0,400;0,700;1,400&display=swap"
-			rel="stylesheet"
-		/>
+		<link rel="stylesheet" href="/fonts/fonts.css" />
 		<link
 			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
 			rel="stylesheet"

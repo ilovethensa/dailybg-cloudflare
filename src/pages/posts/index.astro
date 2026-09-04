@@ -1,11 +1,29 @@
 ---
 import Base from "../../layouts/Base.astro";
 import { getAllPosts, toPostSummary } from "../../lib/posts-db";
+import { TWITTER_SITE } from "../../consts";
 
 export const prerender = false;
 
 const posts = await getAllPosts();
 const summaries = posts.map(toPostSummary);
+
+const jsonLd = {
+	"@context": "https://schema.org",
+	"@type": "CollectionPage",
+	name: "Всички публикации",
+	description: "Всички статии на dailyBG",
+	url: `${Astro.url.origin}/posts`,
+	mainEntity: {
+		"@type": "ItemList",
+		itemListElement: summaries.map((post, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			url: `${Astro.url.origin}/posts/${post.id}`,
+			name: post.title,
+		})),
+	},
+};
 
 const formatDate = (date: Date) =>
 	date.toLocaleDateString("bg-BG", {
@@ -53,7 +71,7 @@ const filteredGrouped =
 		: grouped;
 ---
 
-<Base title="Всички публикации" description="Всички статии">
+<Base title="Всички публикации" description="Всички статии" twitterSite={TWITTER_SITE} jsonLd={jsonLd}>
 	<div class="posts-page">
 		<header class="page-header">
 			<span class="page-kicker">Архив</span>

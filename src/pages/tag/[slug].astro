@@ -3,6 +3,7 @@ import Base from "../../layouts/Base.astro";
 import PostCard from "../../components/PostCard.astro";
 import { getPostsByTagSlug, toPostSummary } from "../../lib/posts-db";
 import { tagToSlug } from "../../lib/slugs";
+import { TWITTER_SITE } from "../../consts";
 
 export const prerender = false;
 
@@ -16,9 +17,26 @@ if (posts.length === 0) {
 
 const label = posts[0].tags.find((t) => tagToSlug(t) === tagSlug) ?? tagSlug;
 const summaries = posts.map(toPostSummary);
+
+const jsonLd = {
+	"@context": "https://schema.org",
+	"@type": "CollectionPage",
+	name: `Публикации с таг "${label}"`,
+	description: `Всички публикации с таг ${label}`,
+	url: `${Astro.url.origin}/tag/${tagSlug}`,
+	mainEntity: {
+		"@type": "ItemList",
+		itemListElement: summaries.map((post, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			url: `${Astro.url.origin}/posts/${post.id}`,
+			name: post.title,
+		})),
+	},
+};
 ---
 
-<Base title={`Публикации с таг "${label}"`} description={`Всички публикации с таг ${label}`}>
+<Base title={`Публикации с таг "${label}"`} description={`Всички публикации с таг ${label}`} twitterSite={TWITTER_SITE} jsonLd={jsonLd}>
 	<section class="archive-section">
 		<header class="archive-header">
 			<span class="archive-label">Таг</span>
