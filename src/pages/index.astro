@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+import { SITE_DESCRIPTION, SITE_TITLE, TWITTER_SITE } from "../consts";
 import { getAllPosts, toPostSummary } from "../lib/posts-db";
 
 export const prerender = false;
@@ -28,7 +28,7 @@ const jsonLd = {
 };
 ---
 
-<Base title={SITE_TITLE} description={SITE_DESCRIPTION} jsonLd={jsonLd}>
+<Base title={SITE_TITLE} description={SITE_DESCRIPTION} twitterSite={TWITTER_SITE} jsonLd={jsonLd}>
   <!-- Visually hidden site heading so the page has exactly one h1 -->
   <h1 class="sr-only">{SITE_TITLE}</h1>
   <!-- Micro-styles from target -->
@@ -61,7 +61,7 @@ const jsonLd = {
                 <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
                   {lead.tags[0]?.label ?? "Избрани"} • {lead.readingTime} мин четене
                 </span>
-                <h2 class="font-headline-xl text-headline-xl headline-text leading-tight">
+                <h2 class="font-headline-xl text-headline-xl headline-text leading-tight overflow-wrap-anywhere md:overflow-wrap-normal">
                   <a href={lead.href}>{lead.title}</a>
                 </h2>
                 {lead.excerpt && <p class="font-article-body text-secondary mt-stack-sm max-w-2xl text-meta-ui">{lead.excerpt}</p>}
