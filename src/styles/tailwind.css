@@ -52,14 +52,14 @@
 	--color-on-primary-fixed-variant: #474746;
 	--color-surface-container: #eeeeee;
 
-	--font-label-sm: "Inter", sans-serif;
-	--font-article-body: "Libre Caslon Text", Georgia, serif;
-	--font-headline-xl: "Libre Caslon Text", Georgia, serif;
-	--font-display-lg: "Libre Caslon Text", Georgia, serif;
-	--font-headline-lg: "Libre Caslon Text", Georgia, serif;
-	--font-meta-ui: "Inter", sans-serif;
-	--font-navigation: "Inter", sans-serif;
-	--font-headline-lg-mobile: "Libre Caslon Text", Georgia, serif;
+	--font-label-sm: "Rubik", sans-serif;
+	--font-article-body: "Rubik", sans-serif;
+	--font-headline-xl: "Rubik", sans-serif;
+	--font-display-lg: "Rubik", sans-serif;
+	--font-headline-lg: "Rubik", sans-serif;
+	--font-meta-ui: "Rubik", sans-serif;
+	--font-navigation: "Rubik", sans-serif;
+	--font-headline-lg-mobile: "Rubik", sans-serif;
 
 	--text-label-sm: 12px;
 	--text-label-sm--line-height: 1;

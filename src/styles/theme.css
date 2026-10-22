@@ -28,6 +28,10 @@
 	/* Sticky section nav bar height (masthead scrolls above it) */
 	--nav-height: 48px;
 
+	--font-body: "Rubik", sans-serif;
+	--font-heading: "Rubik", sans-serif;
+	--font-mono: "Rubik", monospace;
+
 	/* E-ink: no accent color. Links read as black-on-paper, set apart by
 	 * weight/underline rather than hue. */
 	--color-brand: light-dark(#0066cc, #4d9fff);
