@@ -25,6 +25,7 @@
 */
 
 :root {
+	color-scheme: light;
 	/* Sticky section nav bar height (masthead scrolls above it) */
 	--nav-height: 48px;
 

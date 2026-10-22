@@ -532,7 +532,7 @@ const related = otherPosts.map(toPostSummary);
 		font-weight: 500;
 		text-transform: uppercase;
 		letter-spacing: var(--tracking-wide);
-		color: var(--color-muted);
+		color: #52525b; /* Fixed: Dark grey for the label */
 		margin-bottom: var(--spacing-3);
 	}
 
@@ -553,7 +553,7 @@ const related = otherPosts.map(toPostSummary);
 	.toc-content :global(.toc-link) {
 		display: block;
 		font-size: var(--font-size-sm);
-		color: var(--color-muted);
+		color: #71717a; /* Fixed: Medium grey for the links */
 		text-decoration: none;
 		padding: var(--spacing-1) 0;
 		transition: color var(--transition-fast);
@@ -562,7 +562,8 @@ const related = otherPosts.map(toPostSummary);
 
 	.toc-content :global(.toc-link:hover),
 	.toc-content :global(.toc-link.active) {
-		color: var(--color-text);
+		color: #1a1a1a; /* Fixed: Almost black for hover/active */
+		font-weight: 500; /* Makes the active section pop more */
 	}
 
 	/* More posts section */
