@@ -7,10 +7,51 @@ export const prerender = false;
 
 const posts = await getAllPosts();
 const items = posts.map(toPostSummary);
-const [lead, side, ...rest] = items;
-const stories = rest.slice(0, 3);
-const briefing = rest.slice(3, 6);
-const longRead = rest[6] ?? null;
+
+const lead = items[0] ?? null;
+const flank = items.slice(1, 3);
+const briefing = items.slice(3, 7);
+const strip = items.slice(7, 11);
+
+/**
+ * Group the newest tags into broadsheet rubrics. A story may appear in more
+ * than one rubric, which mirrors how broadsheets cross-file related coverage.
+ */
+const tagStats = new Map<string, { slug: string; count: number }>();
+for (const item of items) {
+	for (const tag of item.tags) {
+		const entry = tagStats.get(tag.label) ?? { slug: tag.slug, count: 0 };
+		entry.count += 1;
+		tagStats.set(tag.label, entry);
+	}
+}
+
+const sections = [...tagStats.entries()]
+	.filter(([, info]) => info.count >= 2)
+	.sort((a, b) => b[1].count - a[1].count)
+	.slice(0, 4)
+	.map(([label, info]) => ({
+		label,
+		slug: info.slug,
+		count: info.count,
+		posts: items.filter((item) => item.tags.some((tag) => tag.label === label)).slice(0, 4),
+	}));
+
+const navLinks = [
+	{ label: "Начало", href: "/", active: true },
+	...sections.map((section) => ({ label: section.label, href: `/tag/${section.slug}` })),
+	{ label: "Архив", href: "/posts" },
+	{ label: "Търсене", href: "/search" },
+];
+
+const formatDate = (date: Date) =>
+	date.toLocaleDateString("bg-BG", { day: "numeric", month: "long", year: "numeric" });
+
+const formatShortDate = (date: Date) =>
+	date.toLocaleDateString("bg-BG", { day: "2-digit", month: "2-digit", year: "2-digit" });
+
+const formatTime = (date: Date) =>
+	date.toLocaleTimeString("bg-BG", { hour: "2-digit", minute: "2-digit" });
 
 const jsonLd = {
 	"@context": "https://schema.org",
@@ -28,171 +69,327 @@ const jsonLd = {
 };
 ---
 
-<Base title={SITE_TITLE} description={SITE_DESCRIPTION} twitterSite={TWITTER_SITE} jsonLd={jsonLd}>
-  <!-- Visually hidden site heading so the page has exactly one h1 -->
-  <h1 class="sr-only">{SITE_TITLE}</h1>
-  <!-- Micro-styles from target -->
-  <style>
-    .article-border-b { border-bottom: 1px solid #e0e0e0; }
-    .article-border-r { border-right: 1px solid #e0e0e0; }
-    .hover-underline:hover .headline-text { text-decoration: underline; text-underline-offset: 4px; }
-    .headline-text a { color: inherit; }
-  </style>
+<Base
+	title={SITE_TITLE}
+	description={SITE_DESCRIPTION}
+	twitterSite={TWITTER_SITE}
+	jsonLd={jsonLd}
+	navLinks={navLinks}
+>
+	<style>
+		.headline-text a {
+			color: inherit;
+		}
+		.headline-text a:hover {
+			color: var(--color-secondary);
+		}
+	</style>
 
-  {items.length === 0 ? (
-    <section class="empty-state py-12 text-center">
-      <h2 class="text-2xl mb-2">Все още няма публикации</h2>
-      <p class="text-on-surface-variant mb-4">Добавете публикации в D1 базата данни, за да ги видите тук.</p>
-    </section>
-  ) : (
-    <div class="max-w-[1280px] mx-auto px-margin-mobile md:px-margin-desktop bg-surface-bright text-primary">
-        <!-- Feature Section (Asymmetrical Grid) -->
-        <section class="grid grid-cols-1 md:grid-cols-12 article-border-b">
-          {lead && (
-            <article class="md:col-span-8 md:pr-gutter hover-underline cursor-pointer group py-stack-md">
-              <a href={lead.href} class="mb-stack-md overflow-hidden block">
-                {lead.image ? (
-                  <img src={lead.image} class="w-full h-[300px] md:h-[500px] object-cover transition-transform duration-700 group-hover:scale-105" alt={lead.title} width="1920" height="1080" fetchpriority="high" />
-                  ) : (
-                    <div class="w-full h-[300px] md:h-[500px] bg-surface"></div>
-                  )}
-              </a>
-              <div class="flex flex-col gap-2">
-                <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                  {lead.tags[0]?.label ?? "Избрани"} • {lead.readingTime} мин четене
-                </span>
-                <h2 class="font-headline-xl text-headline-lg-mobile md:text-headline-xl headline-text leading-tight wrap-anywhere md:wrap-normal">
-                  <a href={lead.href}>{lead.title}</a>
-                </h2>
-                {lead.excerpt && <p class="font-article-body text-secondary mt-stack-sm max-w-2xl text-meta-ui">{lead.excerpt}</p>}
-                <div class="mt-4 flex items-center gap-2">
-                  {lead.author && <span class="font-meta-ui font-bold">{lead.author}</span>}
-                  <span class="text-outline">•</span>
-                  <span class="font-meta-ui text-on-surface-variant">{lead.date.toLocaleDateString("bg-BG", { year: "numeric", month: "long", day: "numeric" })}</span>
-                </div>
-              </div>
-            </article>
-          )}
+	{items.length === 0 ? (
+		<section class="mx-auto max-w-7xl px-6 py-12 text-center lg:px-12">
+			<h1 class="mb-2 font-headline-secondary text-headline-primary">Все още няма публикации</h1>
+			<p class="mb-4 text-on-surface-variant">Добавете публикации в D1 базата данни, за да ги видите тук.</p>
+		</section>
+	) : (
+		<div class="w-full bg-background">
+			<div class="mx-auto max-w-7xl px-6 py-space-sm lg:px-12">
+				<div class="flex w-full flex-col">
+					<!-- 1. TOP LEAD / HERO COMPLEX (3-column asymmetrical grid) -->
+					<section class="grid grid-cols-1 gap-space-md border-b-2 border-border-dark pb-space-md lg:grid-cols-12">
+						<!-- LEFT FLANK -->
+						<div class="flex flex-col space-y-2 border-border-hairline lg:col-span-3 lg:border-r lg:pr-space-md">
+							{flank.map((story) => (
+								<article class="group flex flex-col space-y-0.5 border-b border-border-hairline pb-space-sm">
+									<div class="flex items-center justify-between">
+										<span
+											class="font-eyebrow-category text-[10px] font-bold uppercase tracking-wider text-on-surface-variant"
+										>
+											{story.tags[0]?.label ?? "Новини"}
+										</span>
+										<time class="font-timestamp text-timestamp text-outline" datetime={story.date.toISOString()}>
+											{formatTime(story.date)}
+										</time>
+									</div>
+									<h3
+										class="headline-text font-headline-secondary text-headline-compact leading-snug text-on-surface transition-colors group-hover:text-secondary"
+									>
+										<a href={story.href}>{story.title}</a>
+									</h3>
+									<div class="my-1 aspect-[16/10] w-full overflow-hidden bg-surface-subtle">
+										{story.image ? (
+											<img
+												src={story.image}
+												alt={story.title}
+												class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+												loading="lazy"
+											/>
+										) : (
+											<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
+												img
+											</span>
+										)}
+									</div>
+									{story.excerpt && (
+										<p class="line-clamp-3 font-body-regular text-[13px] leading-snug text-on-surface-variant">
+											{story.excerpt}
+										</p>
+									)}
+								</article>
+							))}
+						</div>
 
-          {side && (
-            <article class="md:col-span-4 md:pl-gutter hover-underline cursor-pointer group py-stack-md">
-              <div class="flex flex-col h-full justify-between">
-                <div>
-                  <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                    {"Политика"} • {side.tags[0]?.label ?? "Изпратено"}
-                  </span>
-                  <h3 class="font-headline-lg text-headline-lg headline-text mt-2 leading-snug">
-                    <a href={side.href}>{side.title}</a>
-                  </h3>
-                  {side.image && (
-                    <div class="my-stack-md">
-                      <a href={side.href} class="block overflow-hidden">
-                        <img src={side.image} class="w-full h-40 md:h-64 object-cover" alt={side.title} width="1920" height="1080" loading="lazy" />
-                      </a>
-                    </div>
-                  )}
-                  {side.excerpt && <p class="font-meta-ui text-on-surface-variant leading-relaxed">{side.excerpt}</p>}
-                </div>
-                <div class="mt-stack-lg pt-stack-md border-t border-outline-variant">
-                  {side.author && <span class="font-meta-ui font-bold">{side.author}</span>}
-                </div>
-              </div>
-            </article>
-          )}
-        </section>
+						<!-- CENTER PRIMARY -->
+						<article class="flex flex-col lg:col-span-6 lg:px-space-xs">
+							<div class="space-y-1.5">
+								<div class="flex flex-wrap items-center gap-space-xs">
+									<span
+										class="bg-primary px-1.5 py-0.5 font-eyebrow-category text-[10px] font-bold uppercase tracking-widest text-on-primary"
+									>
+										{lead.tags[0]?.label ?? "Избрани"}
+									</span>
+									<span class="font-timestamp text-timestamp uppercase text-on-surface-variant">
+										• {lead.readingTime} МИН ЧЕТЕНЕ • {formatDate(lead.date)}
+									</span>
+								</div>
+								<h1
+									class="headline-text font-headline-lead text-[1.75rem] leading-[2.1rem] tracking-tight text-on-surface transition-colors hover:text-secondary md:text-headline-lead"
+								>
+									<a href={lead.href}>{lead.title}</a>
+								</h1>
+								<div class="relative my-2 aspect-[16/10] w-full overflow-hidden bg-surface-subtle">
+									{lead.image ? (
+										<img src={lead.image} alt={lead.title} class="h-full w-full object-cover" fetchpriority="high" />
+									) : (
+										<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
+											img
+										</span>
+									)}
+									{lead.image && (
+										<div
+											class="absolute inset-x-0 bottom-0 flex items-center justify-between bg-ticker-bg/90 px-space-sm py-1 font-timestamp text-[10px] text-surface"
+										>
+											<span>Снимка: {lead.author ?? "Редакция"}</span>
+											<span class="font-semibold uppercase tracking-wider text-surface-dim">dailyBG</span>
+										</div>
+									)}
+								</div>
+								{lead.excerpt && (
+									<p class="font-body-lead text-[15px] font-normal leading-snug text-on-surface">
+										{lead.excerpt}
+									</p>
+								)}
+								<div class="flex flex-wrap items-center gap-2 pt-1 font-timestamp text-timestamp">
+									{lead.author && <span class="font-bold text-on-surface">{lead.author}</span>}
+									<span class="text-outline-variant">•</span>
+									<a href={lead.href} class="font-semibold text-secondary hover:underline">
+										Прочетете статията →
+									</a>
+								</div>
+							</div>
+						</article>
 
-        <!-- Secondary Grid (3 Columns) -->
-        <section class="grid grid-cols-1 md:grid-cols-3 article-border-b">
-          {stories.map((story, idx) => {
-            const isTextOnly = idx === 2;
-            return isTextOnly ? (
-              <article class="md:pl-gutter hover-underline cursor-pointer py-stack-md">
-                <div class="flex flex-col justify-center h-full">
-                  <span class="text-label-sm font-label-sm text-error uppercase font-bold">
-                     {story.tags[0]?.label ?? "Икономически анализ"}
-                  </span>
-                  <h4 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg headline-text mt-2 leading-snug">
-                    <a href={story.href}>{story.title}</a>
-                  </h4>
-                  {story.excerpt && (
-                    <>
-                      <p class="font-article-body text-article-body text-on-surface-variant mt-4 italic leading-relaxed">“{story.excerpt}”</p>
-                      <p class="font-meta-ui text-on-surface-variant mt-4 leading-relaxed">{story.excerpt}</p>
-                    </>
-                  )}
-                  <div class="mt-6 flex items-center gap-2">
-                    {story.author && <span class="font-meta-ui font-bold">{story.author}</span>}
-                  </div>
-                </div>
-              </article>
-            ) : (
-              <article class={`md:pr-gutter md:article-border-r hover-underline cursor-pointer group py-stack-md${idx === 1 ? " md:px-gutter" : ""}`}>
-                <a href={story.href} class="mb-stack-md block overflow-hidden">
-                  {story.image ? (
-                    <img src={story.image} class="w-full h-40 md:h-48 object-cover" alt={story.title} width="1920" height="1080" loading="lazy" />
-                  ) : (
-                    <div class="w-full h-40 md:h-48 bg-surface"></div>
-                  )}
-                </a>
-                <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">
-                   {story.tags[0]?.label ?? "История"}
-                </span>
-                <h4 class="font-headline-lg text-headline-lg-mobile md:text-headline-lg headline-text mt-2 leading-snug">
-                  <a href={story.href}>{story.title}</a>
-                </h4>
-                {story.excerpt && <p class="font-meta-ui text-on-surface-variant mt-3 leading-relaxed">{story.excerpt}</p>}
-                <div class="mt-4 flex items-center gap-2">
-                  {story.author && <span class="font-meta-ui font-bold">{story.author}</span>}
-                </div>
-              </article>
-            );
-          })}
-        </section>
+						<!-- RIGHT FLANK: LIVE BRIEFING -->
+						<aside class="flex flex-col border-border-hairline lg:col-span-3 lg:border-l lg:pl-space-md">
+							<div class="mb-2 flex items-center justify-between gap-2 border-b-2 border-border-dark pb-1.5">
+								<div class="flex items-center gap-1.5">
+									<span class="relative flex h-2 w-2 shrink-0">
+										<span class="absolute inline-flex h-full w-full animate-ping rounded-full bg-live-red opacity-75"></span>
+										<span class="relative inline-flex h-2 w-2 rounded-full bg-live-red"></span>
+									</span>
+									<h2 class="whitespace-nowrap font-eyebrow-category text-[10px] font-bold uppercase tracking-widest text-primary">
+										Брифинг в реално време
+									</h2>
+								</div>
+								<span class="whitespace-nowrap font-timestamp text-[10px] font-semibold text-outline">24/7 поток</span>
+							</div>
+							<div class="flex flex-col divide-y divide-border-hairline">
+								{briefing.map((item, idx) => (
+									<article class="group py-1.5">
+										<div class="flex items-baseline gap-space-xs">
+											<time
+												class:list={[
+													"shrink-0 font-timestamp text-[11px] font-bold",
+													idx === 0 ? "text-live-red" : "text-primary",
+												]}
+												datetime={item.date.toISOString()}
+											>
+												{formatTime(item.date)}
+											</time>
+											<span class="font-eyebrow-category text-[10px] font-bold uppercase tracking-wider text-outline-variant">
+												{item.tags[0]?.label ?? "Новини"}
+											</span>
+										</div>
+										<h3 class="mt-0.5 font-headline-compact text-[13px] font-semibold leading-snug text-secondary group-hover:underline">
+											<a href={item.href}>{item.title}</a>
+										</h3>
+										{item.excerpt && (
+											<p class="mt-0.5 line-clamp-3 font-body-compact text-[11px] leading-snug text-on-surface-variant">
+												{item.excerpt}
+											</p>
+										)}
+									</article>
+								))}
+							</div>
+							<a
+								href="/posts"
+								class="mt-2 flex items-center justify-center gap-1 border border-border-hairline bg-surface-subtle py-1.5 text-center font-eyebrow-category text-[10px] uppercase tracking-wider text-primary transition-colors hover:bg-ticker-bg hover:text-surface"
+							>
+								Към пълния денонощен архив
+								<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+							</a>
+						</aside>
 
-        <!-- Briefs & Long Read -->
-        <section class="grid grid-cols-1 md:grid-cols-4 gap-gutter py-stack-md">
-          <div class="col-span-1">
-            <h5 class="text-label-sm font-label-sm uppercase border-b border-primary pb-2 mb-stack-md">Брифинг</h5>
-            <ul class="flex flex-col gap-stack-md">
-              {briefing.map((b) => (
-                <li class="hover:opacity-70 transition-opacity cursor-pointer">
-                  <a href={b.href}>
-                    <p class="font-meta-ui font-bold leading-tight">{b.title}</p>
-                    <span class="text-label-sm text-on-surface-variant">
-                      {b.date.toLocaleTimeString("bg-BG", { hour: "numeric", minute: "2-digit" }) || `${b.readingTime} мин`}
-                    </span>
-                  </a>
-                </li>
-              ))}
-            </ul>
-          </div>
+						<!-- FOUR-UP DIGEST STRIP -->
+						{strip.length > 0 && (
+							<div class="mt-1 w-full border-t border-border-hairline pt-space-sm lg:col-span-12">
+								<div
+									class="grid grid-cols-1 gap-space-md divide-border-hairline md:grid-cols-2 md:divide-x md:divide-y-0 lg:grid-cols-4"
+								>
+									{strip.map((story, idx) => (
+										<article
+											class:list={[
+												"group flex flex-col justify-between space-y-0.5 md:px-space-sm",
+												idx === 0 && "md:pl-0",
+												idx === strip.length - 1 && "md:pr-0",
+												idx > 0 && "border-t border-border-hairline pt-space-xs md:border-t-0 md:pt-0",
+											]}
+										>
+											<div class="space-y-0.5">
+												<div class="flex items-center justify-between">
+													<span
+														class:list={[
+															"font-eyebrow-category text-[10px] font-bold uppercase tracking-wider",
+															idx === 0 ? "text-live-red" : "text-outline",
+														]}
+													>
+														{story.tags[0]?.label ?? "Новини"}
+													</span>
+													<span class="font-timestamp text-timestamp text-outline">
+														{formatShortDate(story.date)}
+													</span>
+												</div>
+												<div class="my-1 aspect-[16/9] w-full overflow-hidden bg-surface-subtle">
+													{story.image ? (
+														<img
+															src={story.image}
+															alt={story.title}
+															class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+															loading="lazy"
+														/>
+													) : (
+														<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
+															img
+														</span>
+													)}
+												</div>
+												<h4
+													class="headline-text font-headline-compact text-[13px] font-bold leading-snug text-on-surface transition-colors group-hover:text-secondary group-hover:underline"
+												>
+													<a href={story.href}>{story.title}</a>
+												</h4>
+												{story.excerpt && (
+													<p class="line-clamp-2 font-body-compact text-[11px] leading-snug text-on-surface-variant">
+														{story.excerpt}
+													</p>
+												)}
+											</div>
+										</article>
+									))}
+								</div>
+							</div>
+						)}
+					</section>
 
-          {longRead && (
-            <article class="md:col-span-3 flex flex-col md:flex-row gap-gutter group cursor-pointer border-l border-outline-variant md:pl-gutter">
-              <div class="md:w-1/2">
-                <span class="text-label-sm font-label-sm text-on-surface-variant uppercase">Дълго четене</span>
-                <h4 class="font-headline-xl text-headline-lg-mobile md:text-headline-lg headline-text mt-2">
-                  <a href={longRead.href}>{longRead.title}</a>
-                </h4>
-                {longRead.excerpt && <p class="font-meta-ui text-on-surface-variant mt-4 leading-relaxed">{longRead.excerpt}</p>}
-                <div class="mt-4">
-                  <a href={longRead.href} class="font-meta-ui font-bold underline">Прочетете специалния доклад →</a>
-                </div>
-              </div>
-              <div class="md:w-1/2 bg-surface-container overflow-hidden">
-                {longRead.image ? (
-                    <a
-                      href={longRead.href}
-                      class="block w-full h-full min-h-[200px] md:min-h-[300px] bg-cover bg-center grayscale group-hover:grayscale-0 transition-all duration-1000"
-                      style={`background-image: url('${longRead.image}')`}
-                    ></a>
-                ) : (
-                  <div class="w-full h-full min-h-[200px] md:min-h-[300px] bg-surface"></div>
-                )}
-              </div>
-            </article>
-          )}
-        </section>
-    </div>
-  )}
+					<!-- 2. CATEGORY SECTIONS -->
+					{sections.map((section) => (
+						<section class="border-b-2 border-border-dark py-space-md">
+							<div class="mb-space-sm flex flex-wrap items-center justify-between gap-2 border-b border-border-hairline pb-1">
+								<div class="flex flex-wrap items-center gap-space-sm">
+									<h2 class="font-masthead text-headline-secondary uppercase tracking-tight text-primary">
+										{section.label}
+									</h2>
+									<span class="text-border-hairline">/</span>
+									<span
+										class="font-eyebrow-category text-eyebrow-category uppercase tracking-wider text-on-surface-variant"
+									>
+										{section.count} {section.count === 1 ? "публикация" : "публикации"} в рубриката
+									</span>
+								</div>
+								<a
+									href={`/tag/${section.slug}`}
+									class="flex items-center gap-0.5 font-timestamp text-timestamp text-secondary hover:underline"
+								>
+									Всички новини от рубриката
+									<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+								</a>
+							</div>
+							<div
+								class:list={[
+									"grid grid-cols-1 gap-space-sm divide-border-hairline md:divide-x",
+									section.posts.length >= 4
+										? "md:grid-cols-2 lg:grid-cols-4"
+										: section.posts.length === 3
+											? "md:grid-cols-3"
+											: "md:grid-cols-2",
+								]}
+							>
+								{section.posts.map((story, idx) => (
+									<article
+										class:list={[
+											"group flex flex-col justify-between pt-space-xs md:pt-0",
+											idx === 0 && "md:pr-space-sm",
+											idx > 0 && idx < section.posts.length - 1 && "md:px-space-sm",
+											idx > 0 && idx === section.posts.length - 1 && "md:pl-space-sm",
+											idx > 0 && "border-t border-border-hairline md:border-t-0",
+										]}
+									>
+										<div class="space-y-0.5">
+											<div class="my-1 h-[240px] w-full overflow-hidden bg-surface-subtle">
+												{story.image ? (
+													<img
+														src={story.image}
+														alt={story.title}
+														class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+														loading="lazy"
+													/>
+												) : (
+													<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
+														img
+													</span>
+												)}
+											</div>
+											<span
+												class:list={[
+													"font-eyebrow-category text-[10px] font-bold uppercase tracking-wider",
+													idx === 0 ? "text-live-red" : "text-on-surface-variant",
+												]}
+											>
+												{story.tags.slice(0, 2).map((tag) => tag.label).join(" • ") || "Новини"}
+											</span>
+											<h4
+												class="headline-text font-headline-secondary text-[14px] font-bold leading-snug text-on-surface transition-colors group-hover:text-secondary"
+											>
+												<a href={story.href}>{story.title}</a>
+											</h4>
+											{story.excerpt && (
+												<p class="line-clamp-3 font-body-compact text-[12px] leading-snug text-on-surface-variant">
+													{story.excerpt}
+												</p>
+											)}
+										</div>
+										<div
+											class="mt-2 flex items-center justify-between border-t border-border-hairline pt-1 font-timestamp text-timestamp text-outline"
+										>
+											<span>{story.author ?? "Редакция"}</span>
+											<span>{formatTime(story.date)}</span>
+										</div>
+									</article>
+								))}
+							</div>
+						</section>
+					))}
+				</div>
+			</div>
+		</div>
+	)}
 </Base>

@@ -28,6 +28,8 @@ interface Props {
 	twitterTitle?: string | null;
 	twitterDescription?: string | null;
 	jsonLd?: Record<string, unknown> | null;
+	/** Homepage chrome: section links used by the footer. */
+	navLinks?: Array<{ label: string; href: string; active?: boolean }> | null;
 }
 
 const {
@@ -51,6 +53,7 @@ const {
 	twitterTitle,
 	twitterDescription,
 	jsonLd,
+	navLinks,
 } = Astro.props;
 
 const siteTitle = SITE_TITLE;
@@ -143,7 +146,7 @@ const absoluteImage = image ? new URL(image, Astro.site).href : null;
 			<slot />
 		</main>
 
-		<Footer siteTitle={siteTitle} />
+		<Footer siteTitle={siteTitle} navLinks={navLinks ?? undefined} />
 
 		<style is:global>
 			/*

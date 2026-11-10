@@ -1,33 +1,129 @@
 ---
-interface Props {
-	siteTitle: string;
+interface NavItem {
+	label: string;
+	href: string;
+	active?: boolean;
 }
 
-const { siteTitle } = Astro.props;
+interface Props {
+	siteTitle: string;
+	navLinks?: NavItem[];
+}
+
+const { siteTitle, navLinks } = Astro.props;
+const year = new Date().getFullYear();
+
+const rubricLinks =
+	navLinks && navLinks.length > 0
+		? navLinks.slice(0, 7)
+		: [
+				{ label: "Начало", href: "/" },
+				{ label: "Всички публикации", href: "/posts" },
+				{ label: "Търсене", href: "/search" },
+				{ label: "RSS емисия", href: "/rss.xml" },
+			];
 ---
 
-<footer class="border-t border-outline-variant">
-	<div
-		class="flex flex-col items-center gap-stack-md w-full max-w-[1280px] mx-auto py-stack-md px-margin-desktop"
-	>
-		<p class="font-headline-lg text-headline-lg text-primary uppercase font-bold tracking-tighter">
-			{siteTitle}
-		</p>
-		<nav class="flex flex-wrap justify-center gap-x-8 gap-y-2">
-			<a class="font-meta-ui text-on-surface-variant hover:underline" href="/pages/about/">За нас</a>
-			<a class="font-meta-ui text-on-surface-variant hover:underline" href="/pages/contact/">Контакти</a>
-			<a class="font-meta-ui text-on-surface-variant hover:underline" href="/posts">Архив</a>
-			<a class="font-meta-ui text-on-surface-variant hover:underline" href="/pages/careers/">Кариери</a>
-		</nav>
-		<div class="mt-stack-sm flex flex-col items-center gap-2">
-			<div class="flex gap-4">
-				<span class="material-symbols-outlined text-secondary cursor-pointer hover:text-primary">language</span>
-				<span class="material-symbols-outlined text-secondary cursor-pointer hover:text-primary">share</span>
-				<span class="material-symbols-outlined text-secondary cursor-pointer hover:text-primary">mail</span>
+<footer class="mt-space-md w-full border-t-2 border-border-dark bg-surface">
+	<div class="mx-auto max-w-7xl px-6 py-space-md lg:px-12">
+		<div
+			class="grid grid-cols-1 gap-space-md border-b border-border-hairline pb-space-sm md:grid-cols-2 lg:grid-cols-5"
+		>
+			<div class="flex flex-col justify-between pr-0 lg:col-span-2 lg:pr-space-md">
+				<div class="space-y-1">
+					<div class="flex items-baseline gap-space-xs">
+						<span class="font-masthead text-headline-secondary uppercase tracking-tighter text-primary">
+							{siteTitle}
+						</span>
+						<span class="inline-block h-2 w-2 bg-live-red"></span>
+					</div>
+					<p class="max-w-sm font-editorial-quote text-body-compact italic text-on-surface-variant">
+						Свободна преса, неподвластна на партийни или олигархични зависимости. Факти, задълбочени
+						разследвания и геополитически контекст.
+					</p>
+				</div>
+				<div class="mt-space-sm space-y-1">
+					<span class="block font-eyebrow-category text-[11px] font-bold uppercase tracking-wider text-primary">
+						Седмичен бюлетин
+					</span>
+					<p class="text-body-compact text-[12px] text-on-surface-variant">
+						Обобщение на ключовите европейски решения и анализи всяка неделя в пощата ви.
+					</p>
+					<form class="flex items-center gap-space-xs" onsubmit="return false">
+						<input
+							class="w-full max-w-xs border border-border-hairline bg-surface-subtle px-2.5 py-1 text-body-compact text-[12px] text-on-surface focus:border-border-dark focus:outline-none"
+							placeholder="Въведете вашия имейл..."
+							type="email"
+							aria-label="Имейл за бюлетина"
+						/>
+						<button
+							type="submit"
+							class="shrink-0 bg-border-dark px-3 py-1 font-headline-compact text-[11px] uppercase tracking-wider text-on-primary transition-colors hover:bg-on-surface-variant"
+						>
+							Абонамент
+						</button>
+					</form>
+				</div>
 			</div>
-			<p class="font-meta-ui text-on-surface-variant text-[12px] opacity-60">
-				© {new Date().getFullYear()} {siteTitle}. ВСИЧКИ ПРАВА ЗАПАЗЕНИ.
-			</p>
+
+			<div>
+				<h4
+					class="mb-1.5 border-b border-border-dark pb-0.5 font-eyebrow-category text-[11px] font-bold uppercase tracking-widest text-primary"
+				>
+					Рубрики
+				</h4>
+				<ul class="space-y-1 text-body-compact text-[12px] text-on-surface-variant">
+					{rubricLinks.map((link) => (
+						<li>
+							<a class="text-on-surface-variant transition-colors hover:text-primary" href={link.href}>{link.label}</a>
+						</li>
+					))}
+				</ul>
+			</div>
+
+			<div>
+				<h4
+					class="mb-1.5 border-b border-border-dark pb-0.5 font-eyebrow-category text-[11px] font-bold uppercase tracking-widest text-primary"
+				>
+					Институция
+				</h4>
+				<ul class="space-y-1 text-body-compact text-[12px] text-on-surface-variant">
+					<li><a class="text-on-surface-variant transition-colors hover:text-primary" href="/pages/about/">За нас</a></li>
+					<li><a class="text-on-surface-variant transition-colors hover:text-primary" href="/pages/contact/">Контакти</a></li>
+					<li><a class="text-on-surface-variant transition-colors hover:text-primary" href="/pages/careers/">Кариери</a></li>
+					<li><a class="text-on-surface-variant transition-colors hover:text-primary" href="/rss.xml">RSS потоци</a></li>
+				</ul>
+			</div>
+
+			<div>
+				<h4
+					class="mb-1.5 border-b border-border-dark pb-0.5 font-eyebrow-category text-[11px] font-bold uppercase tracking-widest text-primary"
+				>
+					Контакт с редакцията
+				</h4>
+				<div class="space-y-1 text-body-compact text-[12px] text-on-surface-variant">
+					<p>Сигнали, обратна връзка и предложения за теми:</p>
+					<p class="font-timestamp font-bold text-primary">contact@dailybg.org</p>
+					<p class="font-timestamp text-timestamp text-outline">София, България</p>
+					<div class="flex items-center gap-space-sm pt-0.5 text-primary">
+						<a href="/rss.xml" aria-label="RSS" class="material-symbols-outlined text-[16px] text-primary">rss_feed</a>
+						<a href="mailto:contact@dailybg.org" aria-label="Имейл" class="material-symbols-outlined text-[16px] text-primary">mail</a>
+						<a href="/search" aria-label="Търсене" class="material-symbols-outlined text-[16px] text-primary">search</a>
+						<a href="/pages/about/" aria-label="За нас" class="material-symbols-outlined text-[16px] text-primary">info</a>
+					</div>
+				</div>
+			</div>
+		</div>
+
+		<div
+			class="flex flex-col items-center justify-between gap-1 pt-2 font-timestamp text-[11px] text-on-surface-variant sm:flex-row"
+		>
+			<p>© {year} {siteTitle}. Всички права запазени.</p>
+			<div class="flex items-center gap-space-sm">
+				<a class="text-on-surface-variant transition-colors hover:text-primary" href="/pages/about/">За нас</a>
+				<a class="text-on-surface-variant transition-colors hover:text-primary" href="/pages/contact/">Контакти</a>
+				<a class="text-on-surface-variant transition-colors hover:text-primary" href="/pages/careers/">Кариери</a>
+			</div>
 		</div>
 	</div>
 </footer>

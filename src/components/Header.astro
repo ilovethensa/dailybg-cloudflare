@@ -6,30 +6,41 @@ interface Props {
 const { siteTitle } = Astro.props;
 ---
 
-<header class="bg-surface border-b border-outline-variant sticky top-0 z-50">
-	<div
-		class="flex flex-col md:flex-row justify-between items-center w-full max-w-[1280px] mx-auto py-2 px-margin-desktop"
-	>
-		<div class="flex items-center gap-6">
-			<a
-				href="/"
-				class="font-headline-xl text-headline-xl font-bold tracking-tighter text-primary uppercase"
-				>{siteTitle}</a
-			>
+<header class="w-full border-b border-border-hairline bg-surface">
+	<!-- Utility strip -->
+	<div class="border-b border-border-hairline bg-surface-subtle">
+		<div class="mx-auto flex h-8 max-w-7xl items-center justify-between px-6 lg:px-12">
+			<div class="flex items-center gap-space-md font-timestamp text-timestamp text-on-surface-variant">
+				<span class="font-semibold uppercase tracking-wider text-primary">{siteTitle} Независим Бюлетин</span>
+			</div>
+			<div class="flex items-center gap-space-lg font-timestamp text-timestamp">
+				<a class="text-on-surface-variant transition-colors hover:text-primary" href="/pages/about/">За нас</a>
+				<a class="text-on-surface-variant transition-colors hover:text-primary" href="/pages/contact/">Контакти</a>
+				<a class="text-on-surface-variant transition-colors hover:text-primary" href="/posts">Архив</a>
+				<a class="hidden text-on-surface-variant transition-colors hover:text-primary sm:inline" href="/rss.xml">Бюлетин</a>
+				<a class="flex items-center gap-0.5 text-on-surface-variant transition-colors hover:text-primary" href="/search">
+					<span class="material-symbols-outlined text-[14px]">search</span>
+					Търсене
+				</a>
+			</div>
 		</div>
-		<nav class="flex flex-row items-center gap-stack-md">
-			<a
-				class="font-navigation text-navigation text-secondary hover:text-primary"
-				href="/pages/about/"
-			>
-			За нас
-		</a>
-		<a
-			class="font-navigation text-navigation text-secondary hover:text-primary"
-			href="/pages/contact/"
-		>
-			Контакти
-			</a>
-		</nav>
+	</div>
+
+	<!-- Masthead -->
+	<div class="mx-auto flex max-w-7xl flex-col gap-2 px-6 py-2 md:flex-row md:items-end md:justify-between lg:px-12">
+		<div class="flex flex-col">
+			<div class="flex items-baseline gap-space-sm">
+				<a
+					href="/"
+					class="font-masthead text-headline-lead uppercase leading-none tracking-tighter text-primary hover:opacity-90 md:text-masthead"
+				>
+					{siteTitle}
+				</a>
+				<span class="mb-1 inline-block h-2.5 w-2.5 bg-live-red"></span>
+			</div>
+			<p class="mt-0.5 font-editorial-quote text-body-compact italic text-on-surface-variant">
+				Независима европейска журналистика и задълбочени геополитически анализи
+			</p>
+		</div>
 	</div>
 </header>
