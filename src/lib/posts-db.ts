@@ -1,5 +1,6 @@
 import { env } from "cloudflare:workers";
 import { marked } from "marked";
+import { categoryToLabel, categoryToSlug } from "./categories";
 import { tagToSlug } from "./slugs";
 
 export type Post = {
@@ -10,6 +11,7 @@ export type Post = {
 	html: string;
 	pubDate: Date;
 	updatedDate: Date | null;
+	category: string | null;
 	tags: string[];
 	author: string | null;
 	/** Absolute URL to the hero/cover image */
@@ -28,6 +30,7 @@ function rowToPost(row: Record<string, unknown>): Post {
 		html: marked.parse(body) as string,
 		pubDate: new Date((row.pub_date as number) * 1000),
 		updatedDate: row.updated_date ? new Date((row.updated_date as number) * 1000) : null,
+		category: (row.category as string) ?? null,
 		tags: JSON.parse((row.tags as string) ?? "[]"),
 		author: (row.author as string) ?? null,
 		heroImage: (row.hero_image as string) ?? null,
@@ -49,6 +52,7 @@ export function serializePost(post: Post) {
 		html: post.html,
 		pubDate: post.pubDate.toISOString(),
 		updatedDate: post.updatedDate ? post.updatedDate.toISOString() : null,
+		category: post.category,
 		tags: post.tags,
 		author: post.author,
 		heroImage: post.heroImage,
@@ -67,6 +71,7 @@ export function serializePostSummary(post: Post) {
 		excerpt: post.excerpt,
 		pubDate: post.pubDate.toISOString(),
 		updatedDate: post.updatedDate ? post.updatedDate.toISOString() : null,
+		category: post.category,
 		tags: post.tags,
 		author: post.author,
 		heroImage: post.heroImage,
@@ -113,6 +118,12 @@ export async function getPostsByTagSlug(slug: string): Promise<Post[]> {
 		.filter((post) => post.tags.some((tag) => tagToSlug(tag) === wanted));
 }
 
+/** Find published posts filed under a category slug. */
+export async function getPostsByCategorySlug(slug: string): Promise<Post[]> {
+	const posts = await getAllPosts();
+	return posts.filter((post) => post.category && categoryToSlug(post.category) === slug);
+}
+
 export async function searchPosts(query: string): Promise<Post[]> {
 	const db = env.DB;
 	if (!db) return [];
@@ -141,6 +152,7 @@ export interface PostSummary {
 	excerpt: string | null;
 	/** Absolute URL to the hero/cover image */
 	image: string | undefined;
+	category: { slug: string; label: string } | null;
 	tags: Array<{ slug: string; label: string }>;
 	readingTime: number;
 	author: string | undefined;
@@ -154,6 +166,12 @@ export function toPostSummary(post: Post): PostSummary {
 		title: post.title,
 		excerpt: post.excerpt,
 		image: post.heroImage ?? undefined,
+		category: post.category
+			? {
+					slug: categoryToSlug(post.category),
+					label: categoryToLabel(post.category),
+				}
+			: null,
 		tags: post.tags.map((tag) => ({ slug: tagToSlug(tag), label: tag })),
 		readingTime: getReadingTime(post.body),
 		author: post.author ?? undefined,
@@ -260,6 +278,7 @@ export type CreatePostInput = {
 	body: string;
 	pubDate?: string;
 	excerpt?: string;
+	category?: string;
 	tags?: string[];
 	author?: string;
 	heroImage?: string;
@@ -275,8 +294,8 @@ export async function createPost(input: CreatePostInput): Promise<Post | null> {
 
 	await db
 		.prepare(
-			`INSERT INTO posts (slug, title, excerpt, body, pub_date, updated_date, tags, author, hero_image, draft)
-			 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
+			`INSERT INTO posts (slug, title, excerpt, body, pub_date, updated_date, category, tags, author, hero_image, draft)
+			 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`,
 		)
 		.bind(
 			input.slug,
@@ -285,6 +304,7 @@ export async function createPost(input: CreatePostInput): Promise<Post | null> {
 			input.body,
 			pub_date,
 			null,
+			input.category ? categoryToLabel(input.category) : null,
 			JSON.stringify(input.tags ?? []),
 			input.author ?? null,
 			input.heroImage ?? null,
@@ -298,6 +318,7 @@ export type UpdatePostInput = {
 	title?: string;
 	body?: string;
 	excerpt?: string;
+	category?: string;
 	tags?: string[];
 	author?: string;
 	heroImage?: string;
@@ -322,6 +343,7 @@ export async function updatePost(
 	if (updates.title !== undefined) { fields.push(`title = ?${++i}`); values.push(updates.title); }
 	if (updates.body !== undefined) { fields.push(`body = ?${++i}`); values.push(updates.body); }
 	if (updates.excerpt !== undefined) { fields.push(`excerpt = ?${++i}`); values.push(updates.excerpt); }
+	if (updates.category !== undefined) { fields.push(`category = ?${++i}`); values.push(categoryToLabel(updates.category)); }
 	if (updates.tags !== undefined) { fields.push(`tags = ?${++i}`); values.push(JSON.stringify(updates.tags)); }
 	if (updates.author !== undefined) { fields.push(`author = ?${++i}`); values.push(updates.author); }
 	if (updates.heroImage !== undefined) { fields.push(`hero_image = ?${++i}`); values.push(updates.heroImage); }

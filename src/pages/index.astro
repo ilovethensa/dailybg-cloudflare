@@ -1,6 +1,7 @@
 ---
 import Base from "../layouts/Base.astro";
 import { SITE_DESCRIPTION, SITE_TITLE, TWITTER_SITE } from "../consts";
+import { CATEGORIES } from "../lib/categories";
 import { getAllPosts, toPostSummary } from "../lib/posts-db";
 
 export const prerender = false;
@@ -14,32 +15,21 @@ const briefing = items.slice(3, 7);
 const strip = items.slice(7, 11);
 
 /**
- * Group the newest tags into broadsheet rubrics. A story may appear in more
- * than one rubric, which mirrors how broadsheets cross-file related coverage.
+ * Build the homepage sections from the canonical category list. Each section
+ * keeps a fixed order and shows the latest stories filed under its category.
  */
-const tagStats = new Map<string, { slug: string; count: number }>();
-for (const item of items) {
-	for (const tag of item.tags) {
-		const entry = tagStats.get(tag.label) ?? { slug: tag.slug, count: 0 };
-		entry.count += 1;
-		tagStats.set(tag.label, entry);
-	}
-}
-
-const sections = [...tagStats.entries()]
-	.filter(([, info]) => info.count >= 2)
-	.sort((a, b) => b[1].count - a[1].count)
-	.slice(0, 4)
-	.map(([label, info]) => ({
-		label,
-		slug: info.slug,
-		count: info.count,
-		posts: items.filter((item) => item.tags.some((tag) => tag.label === label)).slice(0, 4),
-	}));
+const sections = CATEGORIES.map((category) => {
+	const categoryPosts = items.filter((item) => item.category?.slug === category.slug);
+	return {
+		...category,
+		count: categoryPosts.length,
+		posts: categoryPosts,
+	};
+});
 
 const navLinks = [
 	{ label: "Начало", href: "/", active: true },
-	...sections.map((section) => ({ label: section.label, href: `/tag/${section.slug}` })),
+	...sections.map((section) => ({ label: section.label, href: `/category/${section.slug}` })),
 	{ label: "Архив", href: "/posts" },
 	{ label: "Търсене", href: "/search" },
 ];
@@ -300,7 +290,7 @@ const jsonLd = {
 						)}
 					</section>
 
-					<!-- 2. CATEGORY SECTIONS -->
+					<!-- 2. CATEGORY SECTIONS (generated from post categories) -->
 					{sections.map((section) => (
 						<section class="border-b-2 border-border-dark py-space-md">
 							<div class="mb-space-sm flex flex-wrap items-center justify-between gap-2 border-b border-border-hairline pb-1">
@@ -316,76 +306,122 @@ const jsonLd = {
 									</span>
 								</div>
 								<a
-									href={`/tag/${section.slug}`}
+									href={`/category/${section.slug}`}
 									class="flex items-center gap-0.5 font-timestamp text-timestamp text-secondary hover:underline"
 								>
 									Всички новини от рубриката
 									<span class="material-symbols-outlined text-[14px]">chevron_right</span>
 								</a>
 							</div>
-							<div
-								class:list={[
-									"grid grid-cols-1 gap-space-sm divide-border-hairline md:divide-x",
-									section.posts.length >= 4
-										? "md:grid-cols-2 lg:grid-cols-4"
-										: section.posts.length === 3
-											? "md:grid-cols-3"
-											: "md:grid-cols-2",
-								]}
-							>
-								{section.posts.map((story, idx) => (
-									<article
-										class:list={[
-											"group flex flex-col justify-between pt-space-xs md:pt-0",
-											idx === 0 && "md:pr-space-sm",
-											idx > 0 && idx < section.posts.length - 1 && "md:px-space-sm",
-											idx > 0 && idx === section.posts.length - 1 && "md:pl-space-sm",
-											idx > 0 && "border-t border-border-hairline md:border-t-0",
-										]}
+
+							{section.posts.length === 1 ? (
+								<article class="group flex flex-col gap-space-md md:flex-row">
+									<a
+										href={section.posts[0].href}
+										class="block aspect-[16/10] w-full overflow-hidden bg-surface-subtle md:w-2/5"
 									>
-										<div class="space-y-0.5">
-											<div class="my-1 h-[240px] w-full overflow-hidden bg-surface-subtle">
-												{story.image ? (
-													<img
-														src={story.image}
-														alt={story.title}
-														class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-														loading="lazy"
-													/>
-												) : (
-													<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
-														img
-													</span>
-												)}
-											</div>
-											<span
-												class:list={[
-													"font-eyebrow-category text-[10px] font-bold uppercase tracking-wider",
-													idx === 0 ? "text-live-red" : "text-on-surface-variant",
-												]}
-											>
-												{story.tags.slice(0, 2).map((tag) => tag.label).join(" • ") || "Новини"}
+										{section.posts[0].image ? (
+											<img
+												src={section.posts[0].image}
+												alt={section.posts[0].title}
+												class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+												loading="lazy"
+											/>
+										) : (
+											<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
+												img
+											</span>
+										)}
+									</a>
+									<div class="flex flex-1 flex-col justify-between">
+										<div class="space-y-1">
+											<span class="font-eyebrow-category text-[10px] font-bold uppercase tracking-wider text-live-red">
+												{section.posts[0].tags.slice(0, 2).map((tag) => tag.label).join(" • ")}
 											</span>
 											<h4
-												class="headline-text font-headline-secondary text-[14px] font-bold leading-snug text-on-surface transition-colors group-hover:text-secondary"
+												class="headline-text font-headline-secondary text-headline-secondary leading-snug text-on-surface transition-colors group-hover:text-secondary"
 											>
-												<a href={story.href}>{story.title}</a>
+												<a href={section.posts[0].href}>{section.posts[0].title}</a>
 											</h4>
-											{story.excerpt && (
-												<p class="line-clamp-3 font-body-compact text-[12px] leading-snug text-on-surface-variant">
-													{story.excerpt}
+											{section.posts[0].excerpt && (
+												<p class="font-body-regular text-[13px] leading-snug text-on-surface-variant">
+													{section.posts[0].excerpt}
 												</p>
 											)}
 										</div>
 										<div
 											class="mt-2 flex items-center justify-between border-t border-border-hairline pt-1 font-timestamp text-timestamp text-outline"
 										>
-											<span>{story.author ?? "Редакция"}</span>
-											<span>{formatTime(story.date)}</span>
+											<span>{section.posts[0].author ?? "Редакция"}</span>
+											<span>{formatTime(section.posts[0].date)}</span>
 										</div>
-									</article>
-								))}
-							</div>
+									</div>
+								</article>
+							) : (
+								<div
+									class:list={[
+										"grid grid-cols-1 gap-space-sm divide-border-hairline md:divide-x",
+										section.posts.length >= 4
+											? "md:grid-cols-2 lg:grid-cols-4"
+											: section.posts.length === 3
+												? "md:grid-cols-3"
+												: "md:grid-cols-2",
+									]}
+								>
+									{section.posts.slice(0, 4).map((story, idx, list) => (
+										<article
+											class:list={[
+												"group flex flex-col justify-between pt-space-xs md:pt-0",
+												idx === 0 && "md:pr-space-sm",
+												idx > 0 && idx < list.length - 1 && "md:px-space-sm",
+												idx > 0 && idx === list.length - 1 && "md:pl-space-sm",
+												idx > 0 && "border-t border-border-hairline md:border-t-0",
+											]}
+										>
+											<div class="space-y-0.5">
+												<div class="my-1 h-[240px] w-full overflow-hidden bg-surface-subtle">
+													{story.image ? (
+														<img
+															src={story.image}
+															alt={story.title}
+															class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+															loading="lazy"
+														/>
+													) : (
+														<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
+															img
+														</span>
+													)}
+												</div>
+												<span
+													class:list={[
+														"font-eyebrow-category text-[10px] font-bold uppercase tracking-wider",
+														idx === 0 ? "text-live-red" : "text-on-surface-variant",
+													]}
+												>
+													{story.tags.slice(0, 2).map((tag) => tag.label).join(" • ") || "Новини"}
+												</span>
+												<h4
+													class="headline-text font-headline-secondary text-[14px] font-bold leading-snug text-on-surface transition-colors group-hover:text-secondary"
+												>
+													<a href={story.href}>{story.title}</a>
+												</h4>
+												{story.excerpt && (
+													<p class="line-clamp-3 font-body-compact text-[12px] leading-snug text-on-surface-variant">
+														{story.excerpt}
+													</p>
+												)}
+											</div>
+											<div
+												class="mt-2 flex items-center justify-between border-t border-border-hairline pt-1 font-timestamp text-timestamp text-outline"
+											>
+												<span>{story.author ?? "Редакция"}</span>
+												<span>{formatTime(story.date)}</span>
+											</div>
+										</article>
+									))}
+								</div>
+							)}
 						</section>
 					))}
 				</div>

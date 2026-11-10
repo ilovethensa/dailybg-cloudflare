@@ -1,0 +1,126 @@
+---
+import Base from "../../layouts/Base.astro";
+import { CATEGORIES, getCategoryBySlug } from "../../lib/categories";
+import { getPostsByCategorySlug, toPostSummary } from "../../lib/posts-db";
+import { TWITTER_SITE } from "../../consts";
+
+export const prerender = false;
+
+const slug = Astro.params.slug ?? "";
+const category = getCategoryBySlug(slug);
+
+if (!category) {
+	return Astro.redirect("/404");
+}
+
+const posts = await getPostsByCategorySlug(category.slug);
+const items = posts.map(toPostSummary);
+
+const navLinks = [
+	{ label: "Начало", href: "/" },
+	...CATEGORIES.map((entry) => ({ label: entry.label, href: `/category/${entry.slug}` })),
+	{ label: "Архив", href: "/posts" },
+	{ label: "Търсене", href: "/search" },
+];
+
+const formatDate = (date: Date) =>
+	date.toLocaleDateString("bg-BG", { day: "numeric", month: "long", year: "numeric" });
+
+const formatTime = (date: Date) =>
+	date.toLocaleTimeString("bg-BG", { hour: "2-digit", minute: "2-digit" });
+
+const jsonLd = {
+	"@context": "https://schema.org",
+	"@type": "CollectionPage",
+	name: category.label,
+	description: `Всички публикации в рубрика ${category.label}`,
+	url: `${Astro.url.origin}/category/${category.slug}`,
+	mainEntity: {
+		"@type": "ItemList",
+		itemListElement: items.map((post, index) => ({
+			"@type": "ListItem",
+			position: index + 1,
+			url: `${Astro.url.origin}/posts/${post.id}`,
+			name: post.title,
+		})),
+	},
+};
+---
+
+<Base
+	title={category.label}
+	description={`Всички публикации в рубрика ${category.label}`}
+	twitterSite={TWITTER_SITE}
+	jsonLd={jsonLd}
+	navLinks={navLinks}
+>
+	<section class="mx-auto max-w-7xl px-6 py-space-md lg:px-12">
+		<header class="border-b-2 border-border-dark pb-space-sm">
+			<div class="flex flex-wrap items-center justify-between gap-2">
+				<span class="font-eyebrow-category text-[10px] font-bold uppercase tracking-widest text-live-red">
+					Рубрика
+				</span>
+				<a
+					href="/posts"
+					class="flex items-center gap-0.5 font-timestamp text-timestamp text-secondary hover:underline"
+				>
+					Целият архив
+					<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+				</a>
+			</div>
+			<h1 class="mt-1 font-masthead text-headline-primary uppercase tracking-tight text-primary md:text-headline-lead">
+				{category.label}
+			</h1>
+			<p class="mt-1 font-timestamp text-timestamp text-on-surface-variant">
+				{items.length}
+				{items.length === 1 ? " публикация" : " публикации"}
+			</p>
+		</header>
+
+		{items.length === 0 ? (
+			<p class="py-space-lg font-body-regular text-on-surface-variant">
+				Все още няма публикации в тази рубрика.
+			</p>
+		) : (
+			<div class="mt-space-md grid grid-cols-1 gap-space-md md:grid-cols-2 lg:grid-cols-4">
+				{items.map((story) => (
+					<article class="group flex flex-col justify-between border-t border-border-hairline pt-space-xs">
+						<div class="space-y-0.5">
+							<div class="my-1 aspect-[16/10] w-full overflow-hidden bg-surface-subtle">
+								{story.image ? (
+									<img
+										src={story.image}
+										alt={story.title}
+										class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
+										loading="lazy"
+									/>
+								) : (
+									<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
+										img
+									</span>
+								)}
+							</div>
+							<span class="font-eyebrow-category text-[10px] font-bold uppercase tracking-wider text-on-surface-variant">
+								{story.tags.slice(0, 2).map((tag) => tag.label).join(" • ") || "Новини"}
+							</span>
+							<h2 class="font-headline-secondary text-[15px] font-bold leading-snug text-on-surface transition-colors group-hover:text-secondary">
+								<a href={story.href} class="text-inherit">{story.title}</a>
+							</h2>
+							{story.excerpt && (
+								<p class="line-clamp-3 font-body-compact text-[12px] leading-snug text-on-surface-variant">
+									{story.excerpt}
+								</p>
+							)}
+						</div>
+						<div class="mt-2 flex items-center justify-between border-t border-border-hairline pt-1 font-timestamp text-timestamp text-outline">
+							<span>{story.author ?? "Редакция"}</span>
+							<time datetime={story.date.toISOString()} title={formatDate(story.date)}>
+								{formatTime(story.date)}
+							</time>
+						</div>
+					</article>
+				))}
+			</div>
+		)}
+	</section>
+</Base>

@@ -1,9 +1,43 @@
 ---
-interface Props {
-	siteTitle: string;
+import { CATEGORIES } from "../lib/categories";
+
+interface NavItem {
+	label: string;
+	href: string;
+	active?: boolean;
 }
 
-const { siteTitle } = Astro.props;
+interface Props {
+	siteTitle: string;
+	navLinks?: NavItem[];
+}
+
+const { siteTitle, navLinks } = Astro.props;
+
+const links: NavItem[] =
+	navLinks && navLinks.length > 0
+		? navLinks
+		: [
+				{ label: "Начало", href: "/" },
+				...CATEGORIES.map((category) => ({
+					label: category.label,
+					href: `/category/${category.slug}`,
+				})),
+				{ label: "Архив", href: "/posts" },
+				{ label: "Търсене", href: "/search" },
+			];
+
+const currentPath = Astro.url.pathname;
+
+const isActive = (link: NavItem) =>
+	link.active ??
+	(link.href === "/" ? currentPath === "/" : currentPath.startsWith(link.href));
+
+const today = new Date().toLocaleDateString("bg-BG", {
+	day: "numeric",
+	month: "long",
+	year: "numeric",
+});
 ---
 
 <header class="w-full border-b border-border-hairline bg-surface">
@@ -42,5 +76,29 @@ const { siteTitle } = Astro.props;
 				Независима европейска журналистика и задълбочени геополитически анализи
 			</p>
 		</div>
+		<div class="hidden shrink-0 flex-col items-end font-timestamp text-timestamp text-on-surface-variant md:flex">
+			<span class="uppercase tracking-wider">София</span>
+			<span class="font-semibold text-primary">{today}</span>
+		</div>
 	</div>
 </header>
+
+<!-- Sticky rubric bar -->
+<nav aria-label="Рубрики" class="sticky top-0 z-50 border-b border-border-hairline bg-surface">
+	<div
+		class="mx-auto flex h-12 max-w-7xl items-center gap-5 overflow-x-auto px-6 font-navigation text-[12px] uppercase tracking-wider lg:px-12"
+	>
+		{links.map((link) => (
+			<a
+				href={link.href}
+				class:list={[
+					"shrink-0 whitespace-nowrap py-1 text-on-surface-variant transition-colors hover:text-primary",
+					isActive(link) && "border-b-2 border-border-dark font-bold text-primary",
+				]}
+				aria-current={isActive(link) ? "page" : undefined}
+			>
+				{link.label}
+			</a>
+		))}
+	</div>
+</nav>

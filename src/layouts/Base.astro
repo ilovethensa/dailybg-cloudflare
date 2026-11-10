@@ -140,7 +140,7 @@ const absoluteImage = image ? new URL(image, Astro.site).href : null;
 		</script>
 	</head>
 	<body>
-		<Header siteTitle={siteTitle} />
+		<Header siteTitle={siteTitle} navLinks={navLinks ?? undefined} />
 
 		<main>
 			<slot />

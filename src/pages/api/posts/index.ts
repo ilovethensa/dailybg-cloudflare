@@ -24,7 +24,7 @@ export const POST: APIRoute = async (context) => {
 		});
 	}
 
-	const { slug, title, body: content, excerpt, tags, author, hero_image, draft } = body as Record<string, unknown>;
+	const { slug, title, body: content, excerpt, category, tags, author, hero_image, draft } = body as Record<string, unknown>;
 
 	if (!slug || !title || !content) {
 		return new Response(JSON.stringify({ error: "slug, title, and body are required" }), {
@@ -38,6 +38,7 @@ export const POST: APIRoute = async (context) => {
 		title: title as string,
 		body: content as string,
 		excerpt: excerpt as string | undefined,
+		category: category as string | undefined,
 		tags: tags as string[] | undefined,
 		author: author as string | undefined,
 		heroImage: hero_image as string | undefined,

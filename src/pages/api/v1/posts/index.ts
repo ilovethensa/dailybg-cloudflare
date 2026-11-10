@@ -49,7 +49,7 @@ export const POST: APIRoute = async (context) => {
 		return badRequest("Invalid JSON", "INVALID_BODY");
 	}
 
-	const { slug, title, body: content, excerpt, tags, author, heroImage, draft, pubDate } = body;
+	const { slug, title, body: content, excerpt, category, tags, author, heroImage, draft, pubDate } = body;
 
 	if (!slug || !title || !content) {
 		const missing: string[] = [];
@@ -71,6 +71,7 @@ export const POST: APIRoute = async (context) => {
 		body: content as string,
 		pubDate: pubDate as string | undefined,
 		excerpt: excerpt as string | undefined,
+		category: category as string | undefined,
 		tags: tags as string[] | undefined,
 		author: author as string | undefined,
 		heroImage: heroImage as string | undefined,

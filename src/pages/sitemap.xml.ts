@@ -1,6 +1,7 @@
 import type { APIRoute } from "astro";
 import { getCollection } from "astro:content";
 import { getAllPosts, getUniqueTags } from "../lib/posts-db";
+import { CATEGORIES } from "../lib/categories";
 import { tagToSlug } from "../lib/slugs";
 
 export const prerender = false;
@@ -28,6 +29,13 @@ export const GET: APIRoute = async ({ site }) => {
   </url>`;
 	});
 
+	const categoryUrls = CATEGORIES.map(
+		(category) => `  <url>
+    <loc>${baseUrl}/category/${category.slug}</loc>
+    <priority>0.6</priority>
+  </url>`
+	);
+
 	const staticUrls = [
 		`  <url>
     <loc>${baseUrl}/</loc>
@@ -48,6 +56,7 @@ export const GET: APIRoute = async ({ site }) => {
 	const xml = `<?xml version="1.0" encoding="UTF-8"?>
 <urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
 ${staticUrls.join("\n")}
+${categoryUrls.join("\n")}
 ${postUrls.join("\n")}
 ${tagUrls.join("\n")}
 </urlset>`;
