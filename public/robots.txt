@@ -1,5 +1,14 @@
 User-agent: *
 Allow: /
 Disallow: /search
+Disallow: /*?q=
+Disallow: /*?utm_
+Disallow: /api/
+
+# Google News crawler
+User-agent: Googlebot-News
+Allow: /
 
 Sitemap: https://dailybg.org/sitemap.xml
+Sitemap: https://dailybg.org/sitemap-news.xml
+Sitemap: https://dailybg.org/sitemap-images.xml

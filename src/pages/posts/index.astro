@@ -71,7 +71,12 @@ const filteredGrouped =
 		: grouped;
 ---
 
-<Base title="Всички публикации" description="Всички статии" twitterSite={TWITTER_SITE} jsonLd={jsonLd}>
+<Base
+	title="Архив на всички публикации | dailyBG"
+	description={`Пълният архив на dailyBG — ${summaries.length} публикации за актуалните събития в България, Европа и света.`}
+	twitterSite={TWITTER_SITE}
+	jsonLd={jsonLd}
+>
 	<div class="posts-page">
 		<header class="page-header">
 			<span class="page-kicker">Архив</span>

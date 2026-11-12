@@ -3,7 +3,9 @@ import Base from "../../layouts/Base.astro";
 import PostCard from "../../components/PostCard.astro";
 import { getPostBySlug, getAllPosts, toPostSummary } from "../../lib/posts-db";
 import { tagToSlug } from "../../lib/slugs";
-import { TWITTER_SITE } from "../../consts";
+import { categoryToLabel, categoryToSlug } from "../../lib/categories";
+import { SITE_LOGO, SITE_TITLE, TWITTER_SITE } from "../../consts";
+import { conditionalNotModified } from "../../lib/seo";
 
 export const prerender = false;
 
@@ -13,6 +15,13 @@ const post = slug ? await getPostBySlug(slug) : null;
 if (!post || post.draft) {
 	return Astro.redirect("/404", 404);
 }
+
+// Answer conditional requests with 304 so crawlers skip unchanged articles.
+const lastModified = post.updatedDate ?? post.pubDate;
+const notModified = conditionalNotModified(Astro.request, lastModified);
+if (notModified) return notModified;
+Astro.response.headers.set("Last-Modified", lastModified.toUTCString());
+Astro.response.headers.set("Cache-Control", "public, max-age=0, must-revalidate");
 
 const tags = post.tags.map((tag) => ({ slug: tagToSlug(tag), label: tag }));
 
@@ -24,35 +33,72 @@ const publishDate = post.pubDate.toLocaleDateString("bg-BG", {
 
 const siteUrl = Astro.url.origin;
 const canonical = `${siteUrl}/posts/${post.slug}`;
-const description = post.excerpt ?? "";
+// Fall back to the opening of the body so the description is never empty.
+const description = post.excerpt || post.body.replace(/[#>*_`~|]/g, " ").replace(/\s+/g, " ").trim().slice(0, 155);
 const ogImage = post.heroImage ? new URL(post.heroImage, Astro.url).href : null;
+
+const categorySlug = post.category ? categoryToSlug(post.category) : null;
+const categoryLabel = post.category ? categoryToLabel(post.category) : null;
+
+// Post -> category (when filed) -> home, matching the site's breadcrumb trail.
+const breadcrumbItems = [
+	{ "@type": "ListItem", position: 1, name: "Начало", item: `${siteUrl}/` },
+	...(categorySlug && categoryLabel
+		? [
+				{
+					"@type": "ListItem",
+					position: 2,
+					name: categoryLabel,
+					item: `${siteUrl}/category/${categorySlug}`,
+				},
+			]
+		: []),
+	{
+		"@type": "ListItem",
+		position: categorySlug && categoryLabel ? 3 : 2,
+		name: post.title,
+		item: canonical,
+	},
+];
 
 const jsonLd = {
 	"@context": "https://schema.org",
 	"@graph": [
 		{
-			"@type": "Article",
+			"@type": "NewsArticle",
 			headline: post.title,
-			description: description,
-			author: post.author ? { "@type": "Person", name: post.author } : undefined,
+			description,
+			author: post.author
+				? { "@type": "Person", name: post.author }
+				: { "@type": "Organization", name: `Редакцията на ${SITE_TITLE}` },
 			datePublished: post.pubDate.toISOString(),
 			dateModified: (post.updatedDate ?? post.pubDate).toISOString(),
-			image: ogImage,
+			image: ogImage ?? undefined,
 			url: canonical,
 			mainEntityOfPage: { "@type": "WebPage", "@id": canonical },
+			inLanguage: "bg-BG",
+			speakable: {
+				"@type": "SpeakableSpecification",
+				cssSelector: [".article-title"],
+			},
+			articleSection: categoryLabel ?? post.tags[0] ?? "Новини",
+			...(post.tags.length > 0 ? { keywords: post.tags.join(", ") } : {}),
+			isAccessibleForFree: true,
 			publisher: {
-				"@type": "Organization",
-				name: "dailyBG",
-				url: siteUrl,
+				"@type": "NewsMediaOrganization",
+				name: SITE_TITLE,
+				url: `${siteUrl}/`,
+				logo: {
+					"@type": "ImageObject",
+					url: new URL(SITE_LOGO, Astro.site).href,
+					width: 512,
+					height: 512,
+				},
 			},
 		},
 		{
 			"@type": "BreadcrumbList",
-			itemListElement: [
-				{ "@type": "ListItem", position: 1, name: "Начало", item: siteUrl },
-				{ "@type": "ListItem", position: 2, name: "Публикации", item: `${siteUrl}/posts` },
-				{ "@type": "ListItem", position: 3, name: post.title, item: canonical },
-			],
+			itemListElement: breadcrumbItems,
 		},
 	],
 };
@@ -73,10 +119,11 @@ const related = otherPosts.map(toPostSummary);
 	publishedTime={post.pubDate.toISOString()}
 	modifiedTime={(post.updatedDate ?? post.pubDate).toISOString()}
 	author={post.author}
-	articleSection={post.tags[0] ?? "Новини"}
+	articleSection={categoryLabel ?? post.tags[0] ?? "Новини"}
 	articleTags={post.tags}
 	twitterSite={TWITTER_SITE}
 	twitterImage={ogImage}
+	preloadImage={post.heroImage}
 	jsonLd={jsonLd}
 >
 	<article class="article">

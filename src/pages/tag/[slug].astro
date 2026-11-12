@@ -4,6 +4,7 @@ import PostCard from "../../components/PostCard.astro";
 import { getPostsByTagSlug, toPostSummary } from "../../lib/posts-db";
 import { tagToSlug } from "../../lib/slugs";
 import { TWITTER_SITE } from "../../consts";
+import { conditionalNotModified, latestModified, MIN_ARCHIVE_POSTS } from "../../lib/seo";
 
 export const prerender = false;
 
@@ -18,25 +19,57 @@ if (posts.length === 0) {
 const label = posts[0].tags.find((t) => tagToSlug(t) === tagSlug) ?? tagSlug;
 const summaries = posts.map(toPostSummary);
 
+const siteUrl = Astro.url.origin;
+const canonical = `${siteUrl}/tag/${tagSlug}`;
+const title = `${label} — новини | dailyBG`;
+// Thin tag archives compete with the articles they list, so keep them out of
+// the index until they have enough coverage.
+const robots = posts.length < MIN_ARCHIVE_POSTS ? "noindex, follow" : null;
+
+const lastModified = latestModified(posts);
+const notModified = conditionalNotModified(Astro.request, lastModified);
+if (notModified) return notModified;
+if (lastModified) Astro.response.headers.set("Last-Modified", lastModified.toUTCString());
+const description = `Последни новини и анализи, свързани с „${label}“ — от България и света. Всички материали по темата в dailyBG.`;
+
 const jsonLd = {
 	"@context": "https://schema.org",
-	"@type": "CollectionPage",
-	name: `Публикации с таг "${label}"`,
-	description: `Всички публикации с таг ${label}`,
-	url: `${Astro.url.origin}/tag/${tagSlug}`,
-	mainEntity: {
-		"@type": "ItemList",
-		itemListElement: summaries.map((post, index) => ({
-			"@type": "ListItem",
-			position: index + 1,
-			url: `${Astro.url.origin}/posts/${post.id}`,
-			name: post.title,
-		})),
-	},
+	"@graph": [
+		{
+			"@type": "CollectionPage",
+			name: `Публикации с таг "${label}"`,
+			description,
+			url: canonical,
+			inLanguage: "bg-BG",
+			mainEntity: {
+				"@type": "ItemList",
+				itemListElement: summaries.map((post, index) => ({
+					"@type": "ListItem",
+					position: index + 1,
+					url: `${siteUrl}/posts/${post.id}`,
+					name: post.title,
+				})),
+			},
+		},
+		{
+			"@type": "BreadcrumbList",
+			itemListElement: [
+				{ "@type": "ListItem", position: 1, name: "Начало", item: `${siteUrl}/` },
+				{ "@type": "ListItem", position: 2, name: label, item: canonical },
+			],
+		},
+	],
 };
 ---
 
-<Base title={`Публикации с таг "${label}"`} description={`Всички публикации с таг ${label}`} twitterSite={TWITTER_SITE} jsonLd={jsonLd}>
+<Base
+	title={title}
+	description={description}
+	canonical={canonical}
+	robots={robots}
+	twitterSite={TWITTER_SITE}
+	jsonLd={jsonLd}
+>
 	<section class="archive-section">
 		<header class="archive-header">
 			<span class="archive-label">Таг</span>

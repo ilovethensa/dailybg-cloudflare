@@ -28,6 +28,11 @@ interface Props {
 	twitterTitle?: string | null;
 	twitterDescription?: string | null;
 	jsonLd?: Record<string, unknown> | null;
+	/** Extra RSS feed advertised for this page (e.g. a category feed). */
+	feedUrl?: string | null;
+	feedTitle?: string | null;
+	/** Hero image to preload for a faster LCP. */
+	preloadImage?: string | null;
 	/** Homepage chrome: section links used by the footer. */
 	navLinks?: Array<{ label: string; href: string; active?: boolean }> | null;
 }
@@ -53,6 +58,9 @@ const {
 	twitterTitle,
 	twitterDescription,
 	jsonLd,
+	feedUrl,
+	feedTitle,
+	preloadImage,
 	navLinks,
 } = Astro.props;
 
@@ -63,7 +71,11 @@ const fullTitle = title.includes(siteTitle) ? title : `${title} — ${siteTitle}
 const canonicalURL = canonical ?? new URL(Astro.url.pathname, Astro.site).href;
 
 // Social scrapers require absolute image URLs; resolve relative paths against the site root.
-const absoluteImage = image ? new URL(image, Astro.site).href : null;
+// Pages without their own image fall back to the site-wide default.
+const socialImage = image ?? SITE_IMAGE;
+const absoluteImage = socialImage ? new URL(socialImage, Astro.site).href : null;
+const robotsContent =
+	robots ?? "index, follow, max-image-preview:large, max-snippet:-1, max-video-preview:-1";
 ---
 
 <!doctype html>
@@ -81,16 +93,29 @@ const absoluteImage = image ? new URL(image, Astro.site).href : null;
 		<link rel="sitemap" href="/sitemap.xml" />
 		<link rel="alternate" type="application/rss+xml" title={siteTitle} href="/rss.xml" />
 		<link rel="canonical" href={canonicalURL} />
+		<link rel="alternate" hreflang="bg" href={canonicalURL} />
+		<link rel="alternate" hreflang="x-default" href={canonicalURL} />
+		{feedUrl && (
+			<link
+				rel="alternate"
+				type="application/rss+xml"
+				title={`${siteTitle} — ${feedTitle ?? "последни новини"}`}
+				href={new URL(feedUrl, Astro.site).href}
+			/>
+		)}
+		{preloadImage && (
+			<link rel="preload" as="image" href={new URL(preloadImage, Astro.site).href} fetchpriority="high" />
+		)}
 		<title>{fullTitle}</title>
 		<meta name="description" content={description ?? ""} />
-		{robots && <meta name="robots" content={robots} />}
+		<meta name="robots" content={robotsContent} />
 
 		<!-- Open Graph / Facebook -->
 		<meta property="og:type" content={type} />
 		<meta property="og:locale" content="bg_BG" />
 		<meta property="og:title" content={pageTitle ?? fullTitle} />
 		<meta property="og:description" content={description ?? ""} />
-		<meta property="og:url" content={new URL(Astro.url.pathname, Astro.site).href} />
+		<meta property="og:url" content={canonicalURL} />
 		<meta property="og:site_name" content={siteTitle} />
 		{absoluteImage && <meta property="og:image" content={absoluteImage} />}
 		{absoluteImage && imageWidth && <meta property="og:image:width" content={String(imageWidth)} />}

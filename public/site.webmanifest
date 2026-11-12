@@ -1,6 +1,12 @@
 {
-  "name": "DailyBG",
-  "short_name": "DailyBG",
+  "name": "dailyBG — независими новини",
+  "short_name": "dailyBG",
+  "description": "Независими новини от България и света",
+  "lang": "bg",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait-primary",
   "icons": [
     {
       "src": "/android-chrome-192x192.png",
@@ -15,5 +21,5 @@
   ],
   "theme_color": "#ffffff",
   "background_color": "#ffffff",
-  "display": "standalone"
+  "categories": ["news"]
 }

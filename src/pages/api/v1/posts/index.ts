@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { listPosts, createPost, getPostBySlug, serializePost } from "../../../../lib/posts-db";
 import { verifyApiKey, unauthorized } from "../../../../lib/api-auth";
 import { badRequest, conflict } from "../../../../lib/api-errors";
+import { notifyIndexNow, SITE_ORIGIN } from "../../../../lib/indexnow";
 
 export const prerender = false;
 
@@ -82,6 +83,8 @@ export const POST: APIRoute = async (context) => {
 	});
 
 	if (!post) return badRequest("Could not create post", "INVALID_BODY");
+
+	if (!post.draft) await notifyIndexNow([`${SITE_ORIGIN}/posts/${post.slug}`]);
 
 	return new Response(JSON.stringify(serializePost(post)), {
 		status: 201,

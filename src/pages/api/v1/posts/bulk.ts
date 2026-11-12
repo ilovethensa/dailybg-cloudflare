@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { bulkAction } from "../../../../lib/posts-db";
 import { verifyApiKey, unauthorized } from "../../../../lib/api-auth";
 import { badRequest } from "../../../../lib/api-errors";
+import { notifyIndexNow, SITE_ORIGIN } from "../../../../lib/indexnow";
 
 export const prerender = false;
 
@@ -28,6 +29,11 @@ export const POST: APIRoute = async (context) => {
 
 	const actionName = action as (typeof VALID_ACTIONS)[number];
 	const results = await bulkAction({ action: actionName, slugs: slugs as string[] });
+
+	if (actionName === "publish") {
+		const published = results.filter((result) => result.ok).map((result) => `${SITE_ORIGIN}/posts/${result.slug}`);
+		await notifyIndexNow(published);
+	}
 
 	return new Response(JSON.stringify({ results }), {
 		headers: { "Content-Type": "application/json" },

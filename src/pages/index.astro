@@ -1,6 +1,6 @@
 ---
 import Base from "../layouts/Base.astro";
-import { SITE_DESCRIPTION, SITE_TITLE, TWITTER_SITE } from "../consts";
+import { SITE_DESCRIPTION, SITE_LOGO, SITE_TAGLINE, SITE_TITLE, TWITTER_SITE } from "../consts";
 import { CATEGORIES } from "../lib/categories";
 import { getAllPosts, getFeaturedPosts, toPostSummary } from "../lib/posts-db";
 
@@ -54,24 +54,43 @@ const formatShortDate = (date: Date) =>
 const formatTime = (date: Date) =>
 	date.toLocaleTimeString("bg-BG", { hour: "2-digit", minute: "2-digit" });
 
+const siteUrl = Astro.url.origin;
+
 const jsonLd = {
 	"@context": "https://schema.org",
-	"@type": "WebSite",
-	name: SITE_TITLE,
-	url: Astro.url.origin,
-	potentialAction: {
-		"@type": "SearchAction",
-		target: {
-			"@type": "EntryPoint",
-			urlTemplate: `${Astro.url.origin}/search?q={search_term_string}`,
+	"@graph": [
+		{
+			"@type": "WebSite",
+			name: SITE_TITLE,
+			url: `${siteUrl}/`,
+			inLanguage: "bg-BG",
+			potentialAction: {
+				"@type": "SearchAction",
+				target: {
+					"@type": "EntryPoint",
+					urlTemplate: `${siteUrl}/search?q={search_term_string}`,
+				},
+				"query-input": "required name=search_term_string",
+			},
 		},
-		"query-input": "required name=search_term_string",
-	},
+		{
+			"@type": "NewsMediaOrganization",
+			name: SITE_TITLE,
+			url: `${siteUrl}/`,
+			logo: {
+				"@type": "ImageObject",
+				url: new URL(SITE_LOGO, Astro.site).href,
+				width: 512,
+				height: 512,
+			},
+			publishingPrinciples: `${siteUrl}/pages/about/`,
+		},
+	],
 };
 ---
 
 <Base
-	title={SITE_TITLE}
+	title={`${SITE_TITLE} — ${SITE_TAGLINE}`}
 	description={SITE_DESCRIPTION}
 	twitterSite={TWITTER_SITE}
 	jsonLd={jsonLd}

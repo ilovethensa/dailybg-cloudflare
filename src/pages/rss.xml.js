@@ -1,27 +1,21 @@
-import rss from "@astrojs/rss";
-import { SITE_DESCRIPTION, SITE_TITLE } from "../consts";
+import { buildFeed, feedResponse } from "../lib/feed";
+import { SITE_DESCRIPTION, SITE_TAGLINE, SITE_TITLE } from "../consts";
 import { getAllPosts } from "../lib/posts-db";
 
 export const prerender = false;
 
+/** Most recent articles carried by the feed. */
+const FEED_LIMIT = 50;
+
 export async function GET(context) {
 	const posts = await getAllPosts();
-	const body = rss({
-		title: SITE_TITLE,
-		description: SITE_DESCRIPTION,
-		site: context.site,
-		items: posts.map((post) => ({
-			title: post.title,
-			description: post.excerpt,
-			pubDate: post.pubDate,
-			link: `/posts/${post.slug}`,
-		})),
-	});
-	const response = new Response(body.body, {
-		headers: {
-			"Content-Type": "application/rss+xml; charset=utf-8",
-			"Cache-Control": "public, max-age=1800",
-		},
-	});
-	return response;
+	return feedResponse(
+		await buildFeed({
+			site: context.site ?? new URL("https://dailybg.org"),
+			title: `${SITE_TITLE} — ${SITE_TAGLINE}`,
+			description: SITE_DESCRIPTION,
+			posts: posts.slice(0, FEED_LIMIT),
+			feedPath: "/rss.xml",
+		}),
+	);
 }

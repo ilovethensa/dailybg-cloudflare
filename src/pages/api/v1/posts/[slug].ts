@@ -2,6 +2,7 @@ import type { APIRoute } from "astro";
 import { getPostBySlug, updatePost, deletePost, serializePost } from "../../../../lib/posts-db";
 import { verifyApiKey, unauthorized } from "../../../../lib/api-auth";
 import { badRequest, notFound } from "../../../../lib/api-errors";
+import { notifyIndexNow, SITE_ORIGIN } from "../../../../lib/indexnow";
 
 export const prerender = false;
 
@@ -51,6 +52,8 @@ export const PATCH: APIRoute = async (context) => {
 	);
 
 	if (!post) return notFound();
+
+	if (!post.draft) await notifyIndexNow([`${SITE_ORIGIN}/posts/${post.slug}`]);
 
 	return new Response(JSON.stringify(serializePost(post)), {
 		headers: { "Content-Type": "application/json" },

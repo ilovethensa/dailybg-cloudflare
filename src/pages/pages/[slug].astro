@@ -19,12 +19,26 @@ const { page } = Astro.props;
 const { Content } = await render(page);
 const ogImage = page.data.heroImage ? new URL(page.data.heroImage.src, Astro.url).href : null;
 
+const canonical = `${Astro.url.origin}/pages/${page.id}/`;
+
 const jsonLd = {
 	"@context": "https://schema.org",
-	"@type": "WebPage",
-	name: page.data.title,
-	description: page.data.description ?? "",
-	url: `${Astro.url.origin}/pages/${page.id}/`,
+	"@graph": [
+		{
+			"@type": "WebPage",
+			name: page.data.title,
+			description: page.data.description ?? "",
+			url: canonical,
+			inLanguage: "bg-BG",
+		},
+		{
+			"@type": "BreadcrumbList",
+			itemListElement: [
+				{ "@type": "ListItem", position: 1, name: "Начало", item: `${Astro.url.origin}/` },
+				{ "@type": "ListItem", position: 2, name: page.data.title, item: canonical },
+			],
+		},
+	],
 };
 ---
 
@@ -32,7 +46,7 @@ const jsonLd = {
 	title={page.data.title}
 	description={page.data.description}
 	{...(ogImage ? { image: ogImage } : {})}
-	canonical={`${Astro.url.origin}/pages/${page.id}/`}
+	canonical={canonical}
 	twitterSite={TWITTER_SITE}
 	jsonLd={jsonLd}
 >
