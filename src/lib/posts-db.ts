@@ -17,6 +17,10 @@ export type Post = {
 	/** Absolute URL to the hero/cover image */
 	heroImage: string | null;
 	draft: boolean;
+	/** Whether the editors have promoted this post to the homepage hero block. */
+	featured: boolean;
+	/** Editorial position on the homepage (1-based); `null` when unranked. */
+	featuredRank: number | null;
 	readingTime: number;
 };
 
@@ -35,6 +39,8 @@ function rowToPost(row: Record<string, unknown>): Post {
 		author: (row.author as string) ?? null,
 		heroImage: (row.hero_image as string) ?? null,
 		draft: (row.draft as number) !== 0,
+		featured: (row.featured as number) === 1,
+		featuredRank: (row.featured_rank as number) ?? null,
 		readingTime: getReadingTime(body),
 	};
 }
@@ -57,6 +63,8 @@ export function serializePost(post: Post) {
 		author: post.author,
 		heroImage: post.heroImage,
 		draft: post.draft,
+		featured: post.featured,
+		featuredRank: post.featuredRank,
 		readingTime: post.readingTime,
 	};
 }
@@ -76,6 +84,8 @@ export function serializePostSummary(post: Post) {
 		author: post.author,
 		heroImage: post.heroImage,
 		draft: post.draft,
+		featured: post.featured,
+		featuredRank: post.featuredRank,
 		readingTime: post.readingTime,
 	};
 }
@@ -85,6 +95,60 @@ export async function getAllPosts(): Promise<Post[]> {
 	if (!db) return [];
 	const { results } = await db.prepare("SELECT * FROM posts WHERE draft = 0 ORDER BY pub_date DESC").all<Record<string, unknown>>();
 	return (results ?? []).map(rowToPost);
+}
+
+/**
+ * Published posts promoted to the homepage hero block, in editorial order.
+ * Unranked featured posts fall back to newest-first at the end.
+ */
+export async function getFeaturedPosts(limit = 7): Promise<Post[]> {
+	const db = env.DB;
+	if (!db) return [];
+	const { results } = await db
+		.prepare(
+			`SELECT * FROM posts
+			 WHERE draft = 0 AND featured = 1
+			 ORDER BY COALESCE(featured_rank, 2147483647) ASC, pub_date DESC
+			 LIMIT ?1`,
+		)
+		.bind(limit)
+		.all<Record<string, unknown>>();
+	return (results ?? []).map(rowToPost);
+}
+
+/**
+ * Replace the entire homepage lineup in one atomic transaction. The array
+ * order defines `featured_rank` (1-based); any post left out is unfeatured.
+ * Returns the slugs that could not be featured so callers can report them.
+ */
+export async function setFeaturedOrder(
+	slugs: string[],
+): Promise<{ missing: string[]; drafts: string[] }> {
+	const db = env.DB;
+	if (!db) return { missing: slugs, drafts: [] };
+
+	const missing: string[] = [];
+	const drafts: string[] = [];
+	const valid: string[] = [];
+
+	for (const slug of slugs) {
+		const row = await db.prepare("SELECT draft FROM posts WHERE slug = ?1").bind(slug).first<{ draft: number }>();
+		if (!row) missing.push(slug);
+		else if ((row.draft ?? 0) !== 0) drafts.push(slug);
+		else valid.push(slug);
+	}
+
+	if (missing.length > 0 || drafts.length > 0) return { missing, drafts };
+
+	const statements = [db.prepare("UPDATE posts SET featured = 0, featured_rank = NULL")];
+	valid.forEach((slug, index) => {
+		statements.push(
+			db.prepare("UPDATE posts SET featured = 1, featured_rank = ?1 WHERE slug = ?2").bind(index + 1, slug),
+		);
+	});
+	await db.batch(statements);
+
+	return { missing, drafts };
 }
 
 export async function getPostBySlug(slug: string): Promise<Post | null> {
@@ -192,6 +256,7 @@ export type ListPostsOptions = {
 	tag?: string;
 	author?: string;
 	q?: string;
+	featured?: boolean;
 	sort?: "-pubDate" | "pubDate" | "title" | "-updatedDate";
 	from?: string;
 	to?: string;
@@ -233,6 +298,7 @@ export async function listPosts(opts: ListPostsOptions = {}): Promise<PaginatedP
 		where.push(`tags LIKE ${next()}`);
 		binds.push(`%"${opts.tag}"%`);
 	}
+	if (opts.featured) where.push("featured = 1");
 	if (opts.q) {
 		const q = `%${opts.q.toLowerCase()}%`;
 		where.push(`(LOWER(title) LIKE ${next()} OR LOWER(excerpt) LIKE ${next()} OR LOWER(body) LIKE ${next()})`);
@@ -283,6 +349,8 @@ export type CreatePostInput = {
 	author?: string;
 	heroImage?: string;
 	draft?: boolean;
+	featured?: boolean;
+	featuredRank?: number | null;
 };
 
 export async function createPost(input: CreatePostInput): Promise<Post | null> {
@@ -292,10 +360,15 @@ export async function createPost(input: CreatePostInput): Promise<Post | null> {
 	const pubDate = input.pubDate ? isoToUnix(input.pubDate) : null;
 	const pub_date = pubDate ?? Math.floor(Date.now() / 1000);
 
+	const featured = input.featured === true;
+	const featured_rank = featured
+		? (input.featuredRank ?? (await nextFeaturedRank(db)))
+		: null;
+
 	await db
 		.prepare(
-			`INSERT INTO posts (slug, title, excerpt, body, pub_date, updated_date, category, tags, author, hero_image, draft)
-			 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`,
+			`INSERT INTO posts (slug, title, excerpt, body, pub_date, updated_date, category, tags, author, hero_image, draft, featured, featured_rank)
+			 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)`,
 		)
 		.bind(
 			input.slug,
@@ -309,6 +382,8 @@ export async function createPost(input: CreatePostInput): Promise<Post | null> {
 			input.author ?? null,
 			input.heroImage ?? null,
 			input.draft === false ? 0 : 1,
+			featured ? 1 : 0,
+			featured_rank,
 		)
 		.run();
 	return getPostBySlug(input.slug);
@@ -324,6 +399,8 @@ export type UpdatePostInput = {
 	heroImage?: string;
 	draft?: boolean;
 	pubDate?: string;
+	featured?: boolean;
+	featuredRank?: number | null;
 };
 
 export async function updatePost(
@@ -351,6 +428,29 @@ export async function updatePost(
 	if (updates.pubDate !== undefined) {
 		const ts = isoToUnix(updates.pubDate);
 		if (ts !== null) { fields.push(`pub_date = ?${++i}`); values.push(ts); }
+	}
+	if (updates.featured !== undefined) {
+		if (updates.featured) {
+			fields.push("featured = 1");
+			// Promote to the end of the lineup unless it already has a position.
+			const wasFeatured = ((existing as Record<string, unknown>).featured as number) === 1;
+			const hadRank = ((existing as Record<string, unknown>).featured_rank as number | null) != null;
+			if (updates.featuredRank === undefined && !(wasFeatured && hadRank)) {
+				fields.push(`featured_rank = ?${++i}`);
+				values.push(await nextFeaturedRank(db));
+			}
+		} else {
+			fields.push("featured = 0");
+			fields.push("featured_rank = NULL");
+		}
+	}
+	if (updates.featuredRank !== undefined) {
+		if (updates.featuredRank === null) {
+			fields.push("featured_rank = NULL");
+		} else {
+			fields.push(`featured_rank = ?${++i}`);
+			values.push(updates.featuredRank);
+		}
 	}
 
 	if (fields.length === 0) return getPostBySlug(slug);
@@ -464,6 +564,14 @@ function isoToUnix(iso: string): number | null {
 	const ms = Date.parse(iso);
 	if (Number.isNaN(ms)) return null;
 	return Math.floor(ms / 1000);
+}
+
+/** Next free homepage slot: highest current rank + 1. */
+async function nextFeaturedRank(db: D1Database): Promise<number> {
+	const row = await db
+		.prepare("SELECT COALESCE(MAX(featured_rank), 0) AS m FROM posts WHERE featured = 1")
+		.first<{ m: number }>();
+	return (row?.m ?? 0) + 1;
 }
 
 function getReadingTime(markdown: string): number {

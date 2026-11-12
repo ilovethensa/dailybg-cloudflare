@@ -30,7 +30,7 @@ export const PATCH: APIRoute = async (context) => {
 		return badRequest("Invalid JSON", "INVALID_BODY");
 	}
 
-	const { title, body: content, excerpt, category, tags, author, heroImage, draft, pubDate, bumpUpdated } = body;
+	const { title, body: content, excerpt, category, tags, author, heroImage, draft, pubDate, bumpUpdated, featured, featuredRank } = body;
 
 	const post = await updatePost(
 		slug,
@@ -44,6 +44,8 @@ export const PATCH: APIRoute = async (context) => {
 			heroImage: heroImage as string | undefined,
 			draft: draft === undefined ? undefined : Boolean(draft),
 			pubDate: pubDate as string | undefined,
+			featured: featured === undefined ? undefined : Boolean(featured),
+			featuredRank: featuredRank as number | null | undefined,
 		},
 		{ bumpUpdated: bumpUpdated === undefined ? true : Boolean(bumpUpdated) },
 	);

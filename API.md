@@ -29,12 +29,15 @@ Write endpoints return `401 Unauthorized` (envelope `{ "error": "Unauthorized", 
   "author":      "Author Name",
   "heroImage":   "https://example.com/image.jpg",
   "draft":       false,
+  "featured":    false,
+  "featuredRank": null,
   "readingTime": 1
 }
 ```
 
 - All fields are `camelCase`, in both requests and responses.
 - `draft` is a boolean.
+- `featured` promotes a post to the homepage hero block; `featuredRank` is its 1-based editorial position there (`null` when unranked).
 - `html` and `readingTime` are **server-derived** from `body`; they are never accepted as input.
 - `pubDate` / `updatedDate` are ISO-8601 strings. `updatedDate` is `null` until the first edit that bumps it.
 - `slug` is the only URL identifier; it is immutable in `PATCH` (see rename endpoint).
@@ -48,7 +51,8 @@ List endpoints return a lighter shape without `body` / `html`:
   "slug": "my-article", "title": "My Article", "excerpt": "Short summary",
   "pubDate": "2023-11-14T22:13:20.000Z", "updatedDate": null,
   "category": "Category", "tags": ["tag1", "tag2"], "author": "Author Name",
-  "heroImage": "https://example.com/image.jpg", "draft": false, "readingTime": 1
+  "heroImage": "https://example.com/image.jpg", "draft": false,
+  "featured": false, "featuredRank": null, "readingTime": 1
 }
 ```
 
@@ -70,6 +74,7 @@ GET /api/v1/posts
 | `tag`     | string | —           | exact match |
 | `author`  | string | —           | exact match |
 | `q`       | string | —           | full-text search on title + body |
+| `featured`| bool   | —           | `true` returns only homepage-featured posts |
 | `sort`    | string | `-pubDate`  | `-pubDate`, `pubDate`, `title`, `-updatedDate` |
 | `from`    | ISO date | —         | `pubDate >=` |
 | `to`      | ISO date | —          | `pubDate <=` |
@@ -99,6 +104,8 @@ POST /api/v1/posts
 | `author`    | string   | no       | |
 | `heroImage` | string   | no       | |
 | `draft`     | bool     | no       | default `true` |
+| `featured`  | bool     | no       | promote to the homepage hero block |
+| `featuredRank` | int   | no       | 1-based position; defaults to the end of the lineup |
 | `pubDate`   | ISO date | no       | default `now()` — allows backfill/scheduling |
 
 **`201 Created`** — full `Post`. **`409 Conflict`** if the slug already exists.
@@ -151,6 +158,31 @@ Permanent hard delete. **`204 No Content`** on success. **`404`** if not found.
 > ```
 >
 > Same semantics as `DELETE`.
+
+### Featured posts (homepage hero block)
+
+```
+GET  /api/v1/posts/featured
+PUT  /api/v1/posts/featured
+```
+
+The homepage hero block uses curated `featured` posts in editorial order rather than the most recent ones. `GET` returns the ordered list (`PostSummary[]`, published only) and is public.
+
+`PUT` replaces the entire lineup in one atomic operation. Auth required.
+
+```json
+{
+  "slugs": ["lead-story", "second-story", "third-story"]
+}
+```
+
+- Array order defines `featuredRank` (`1` = lead).
+- At most **7** stories can be featured.
+- Every slug must exist and be published.
+- Any post not listed is removed from the lineup. Send `{ "slugs": [] }` to clear it.
+- The briefing rail on the homepage is unaffected and always shows the most recent posts.
+
+**`200`** returns the updated ordered `PostSummary[]`. **`422`** if a slug is unknown or unpublished.
 
 ### Bulk operations
 

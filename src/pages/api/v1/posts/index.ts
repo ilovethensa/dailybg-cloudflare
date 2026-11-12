@@ -26,6 +26,7 @@ function parseQuery(context: any) {
 		tag: str("tag"),
 		author: str("author"),
 		q: str("q"),
+		featured: sp.get("featured") === "true" || sp.get("featured") === "1",
 		sort: validSort.includes(sort as any) ? (sort as (typeof validSort)[number]) : undefined,
 		from: str("from"),
 		to: str("to"),
@@ -49,7 +50,7 @@ export const POST: APIRoute = async (context) => {
 		return badRequest("Invalid JSON", "INVALID_BODY");
 	}
 
-	const { slug, title, body: content, excerpt, category, tags, author, heroImage, draft, pubDate } = body;
+	const { slug, title, body: content, excerpt, category, tags, author, heroImage, draft, pubDate, featured, featuredRank } = body;
 
 	if (!slug || !title || !content) {
 		const missing: string[] = [];
@@ -76,6 +77,8 @@ export const POST: APIRoute = async (context) => {
 		author: author as string | undefined,
 		heroImage: heroImage as string | undefined,
 		draft: draft === undefined ? true : Boolean(draft),
+		featured: featured === undefined ? undefined : Boolean(featured),
+		featuredRank: featuredRank as number | null | undefined,
 	});
 
 	if (!post) return badRequest("Could not create post", "INVALID_BODY");

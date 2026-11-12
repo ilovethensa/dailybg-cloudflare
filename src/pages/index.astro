@@ -2,24 +2,35 @@
 import Base from "../layouts/Base.astro";
 import { SITE_DESCRIPTION, SITE_TITLE, TWITTER_SITE } from "../consts";
 import { CATEGORIES } from "../lib/categories";
-import { getAllPosts, toPostSummary } from "../lib/posts-db";
+import { getAllPosts, getFeaturedPosts, toPostSummary } from "../lib/posts-db";
 
 export const prerender = false;
 
-const posts = await getAllPosts();
-const items = posts.map(toPostSummary);
+const [allPosts, featuredPosts] = await Promise.all([getAllPosts(), getFeaturedPosts(7)]);
 
-const lead = items[0] ?? null;
-const flank = items.slice(1, 3);
-const briefing = items.slice(3, 7);
-const strip = items.slice(7, 11);
+const recent = allPosts.map(toPostSummary);
+const curated = featuredPosts.map(toPostSummary);
+
+/**
+ * The hero block is driven by editorial `featured` picks, in their configured
+ * order. Any unused slots are filled with the newest non-featured stories.
+ */
+const curatedIds = new Set(curated.map((item) => item.id));
+const heroItems = [...curated, ...recent.filter((item) => !curatedIds.has(item.id))].slice(0, 7);
+
+const lead = heroItems[0] ?? null;
+const flank = heroItems.slice(1, 3);
+const strip = heroItems.slice(3, 7);
+
+// The briefing always shows the most recent stories, independent of curation.
+const briefing = recent.slice(3, 7);
 
 /**
  * Build the homepage sections from the canonical category list. Each section
  * keeps a fixed order and shows the latest stories filed under its category.
  */
 const sections = CATEGORIES.map((category) => {
-	const categoryPosts = items.filter((item) => item.category?.slug === category.slug);
+	const categoryPosts = recent.filter((item) => item.category?.slug === category.slug);
 	return {
 		...category,
 		count: categoryPosts.length,
@@ -75,7 +86,7 @@ const jsonLd = {
 		}
 	</style>
 
-	{items.length === 0 ? (
+	{recent.length === 0 ? (
 		<section class="mx-auto max-w-7xl px-6 py-12 text-center lg:px-12">
 			<h1 class="mb-2 font-headline-secondary text-headline-primary">Все още няма публикации</h1>
 			<p class="mb-4 text-on-surface-variant">Добавете публикации в D1 базата данни, за да ги видите тук.</p>
