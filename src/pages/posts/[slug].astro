@@ -142,7 +142,6 @@ const related = otherPosts.map(toPostSummary);
 					<span>{post.readingTime} мин четене</span>
 				</div>
 				<h1 class="article-title">{post.title}</h1>
-					{post.excerpt && <p class="article-excerpt">{post.excerpt}</p>}
 				</header>
 
 			<div class="article-content" set:html={post.html} />
@@ -412,12 +411,6 @@ const related = otherPosts.map(toPostSummary);
 		line-height: var(--leading-tight);
 		letter-spacing: var(--tracking-tight);
 		margin-bottom: var(--spacing-4);
-	}
-
-	.article-excerpt {
-		font-size: var(--font-size-xl);
-		line-height: var(--leading-relaxed);
-		color: #52525b; /* A readable medium-dark grey (or use #4b5563) */
 	}
 
 	/* Article content typography */
