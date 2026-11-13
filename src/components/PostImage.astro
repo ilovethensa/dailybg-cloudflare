@@ -1,0 +1,86 @@
+---
+import { Image } from "astro:assets";
+
+/**
+ * Responsive image for remote hero URLs stored in D1.
+ *
+ * Remote images are proxied through the Cloudflare Images binding by the
+ * adapter's `/_image` endpoint, which resizes, re-encodes and edge-caches the
+ * result. That turns a multi-megabyte news-site JPEG into a ~60-150 KB WebP.
+ *
+ * Only hosts listed in `image.remotePatterns` (astro.config.mjs) can be
+ * transformed. If a source host is not listed, the endpoint refuses the
+ * request and the inline `onerror` swaps the `<img>` back to the original URL,
+ * so a new source degrades in weight but never breaks.
+ */
+interface Props {
+	src?: string | null;
+	alt: string;
+	/** Rendered widths, e.g. `(min-width: 1024px) 640px, 100vw`. */
+	sizes: string;
+	/** Candidate widths, smallest first. Keep this list short to save transforms. */
+	widths?: number[];
+	/** Intrinsic aspect ratio, used for the generated width/height attributes. */
+	ratio?: string;
+	class?: string;
+	/** Above-the-fold images: eager + high priority. */
+	priority?: boolean;
+}
+
+const {
+	src,
+	alt,
+	sizes,
+	widths = [400, 640, 900],
+	ratio = "16/10",
+	class: className,
+	priority = false,
+} = Astro.props;
+
+const [ratioW, ratioH] = ratio.split("/").map(Number);
+const width = widths[widths.length - 1];
+const height = Math.round((width * ratioH) / ratioW);
+
+const isRemote = !!src && /^https?:\/\//.test(src);
+
+// Drop the (also transformed) srcset candidates before retrying the original,
+// otherwise the browser would re-pick the failing `/_image` URLs.
+const fallback = isRemote
+	? `this.onerror=null;this.removeAttribute("srcset");this.src=${JSON.stringify(src)}`
+	: undefined;
+
+const loading = priority ? "eager" : "lazy";
+const fetchpriority = priority ? "high" : undefined;
+---
+
+{
+	isRemote ? (
+		<Image
+			src={src as string}
+			alt={alt}
+			width={width}
+			height={height}
+			widths={widths}
+			sizes={sizes}
+			format="webp"
+			quality={75}
+			layout="none"
+			loading={loading}
+			fetchpriority={fetchpriority}
+			decoding="async"
+			onerror={fallback}
+			class={className}
+		/>
+	) : (
+		<img
+			src={src ?? undefined}
+			alt={alt}
+			width={width}
+			height={height}
+			loading={loading}
+			fetchpriority={fetchpriority}
+			decoding="async"
+			class={className}
+		/>
+	)
+}

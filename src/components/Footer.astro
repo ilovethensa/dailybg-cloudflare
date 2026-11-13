@@ -1,4 +1,6 @@
 ---
+import Icon from "./Icon.astro";
+
 interface NavItem {
 	label: string;
 	href: string;
@@ -106,10 +108,10 @@ const rubricLinks =
 					<p class="font-timestamp font-bold text-primary">contact@dailybg.org</p>
 					<p class="font-timestamp text-timestamp text-outline">София, България</p>
 					<div class="flex items-center gap-space-sm pt-0.5 text-primary">
-						<a href="/rss.xml" aria-label="RSS" class="material-symbols-outlined text-[16px] text-primary">rss_feed</a>
-						<a href="mailto:contact@dailybg.org" aria-label="Имейл" class="material-symbols-outlined text-[16px] text-primary">mail</a>
-						<a href="/search" aria-label="Търсене" class="material-symbols-outlined text-[16px] text-primary">search</a>
-						<a href="/pages/about/" aria-label="За нас" class="material-symbols-outlined text-[16px] text-primary">info</a>
+						<a href="/rss.xml" aria-label="RSS" class="text-primary"><Icon name="rss_feed" class="text-[16px]" /></a>
+						<a href="mailto:contact@dailybg.org" aria-label="Имейл" class="text-primary"><Icon name="mail" class="text-[16px]" /></a>
+						<a href="/search" aria-label="Търсене" class="text-primary"><Icon name="search" class="text-[16px]" /></a>
+						<a href="/pages/about/" aria-label="За нас" class="text-primary"><Icon name="info" class="text-[16px]" /></a>
 					</div>
 				</div>
 			</div>

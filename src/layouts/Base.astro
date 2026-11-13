@@ -31,8 +31,11 @@ interface Props {
 	/** Extra RSS feed advertised for this page (e.g. a category feed). */
 	feedUrl?: string | null;
 	feedTitle?: string | null;
-	/** Hero image to preload for a faster LCP. */
-	preloadImage?: string | null;
+	/**
+	 * Hero image to preload for a faster LCP. Pass a plain URL for a single
+	 * file, or an object to preload a responsive candidate set.
+	 */
+	preloadImage?: string | { src: string; srcset?: string; sizes?: string } | null;
 	/** Homepage chrome: section links used by the footer. */
 	navLinks?: Array<{ label: string; href: string; active?: boolean }> | null;
 }
@@ -104,7 +107,14 @@ const robotsContent =
 			/>
 		)}
 		{preloadImage && (
-			<link rel="preload" as="image" href={new URL(preloadImage, Astro.site).href} fetchpriority="high" />
+			<link
+				rel="preload"
+				as="image"
+				href={new URL(typeof preloadImage === "string" ? preloadImage : preloadImage.src, Astro.site).href}
+				imagesrcset={typeof preloadImage === "string" ? undefined : preloadImage.srcset}
+				imagesizes={typeof preloadImage === "string" ? undefined : preloadImage.sizes}
+				fetchpriority="high"
+			/>
 		)}
 		<title>{fullTitle}</title>
 		<meta name="description" content={description ?? ""} />
@@ -145,10 +155,6 @@ const robotsContent =
 		<link rel="stylesheet" href="/fonts/fonts.css" />
 		<link
 			href="https://fonts.googleapis.com/css2?family=Rubik:ital,wght@0,300;0,400;0,500;0,600;0,700;1,400&display=swap"
-			rel="stylesheet"
-		/>
-		<link
-			href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
 			rel="stylesheet"
 		/>
 		<script is:inline>

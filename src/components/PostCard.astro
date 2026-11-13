@@ -1,6 +1,6 @@
 ---
-import { Image } from "astro:assets";
 import type { ImageMetadata } from "astro";
+import PostImage from "./PostImage.astro";
 
 interface Props {
 	title: string;
@@ -24,14 +24,24 @@ const formattedDate = date
 		})
 	: null;
 
+const remoteSrc = typeof heroImage === "string" ? heroImage : null;
 const imgSrc = typeof heroImage === "string" ? heroImage : heroImage?.src;
 ---
 
 <article class="post-card">
 	<a href={href} class="card-link">
-		{imgSrc ? (
+		{remoteSrc ? (
 			<div class="card-image">
-				<img src={imgSrc} alt={title} />
+				<PostImage
+					src={remoteSrc}
+					alt={title}
+					sizes="(min-width: 1024px) 300px, (min-width: 640px) 45vw, 100vw"
+					widths={[320, 480, 640]}
+				/>
+			</div>
+		) : imgSrc ? (
+			<div class="card-image">
+				<img src={imgSrc} alt={title} loading="lazy" decoding="async" />
 			</div>
 		) : (
 			<div class="card-placeholder" />

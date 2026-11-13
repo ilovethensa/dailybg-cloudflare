@@ -1,6 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
 import PostCard from "../../components/PostCard.astro";
+import PostImage from "../../components/PostImage.astro";
 import { getPostBySlug, getRelatedPosts, toPostSummary } from "../../lib/posts-db";
 import { tagToSlug } from "../../lib/slugs";
 import { categoryToLabel, categoryToSlug } from "../../lib/categories";
@@ -120,14 +121,20 @@ const related = (await getRelatedPosts(post.slug, 3)).map(toPostSummary);
 	articleTags={post.tags}
 	twitterSite={TWITTER_SITE}
 	twitterImage={ogImage}
-	preloadImage={post.heroImage}
 	jsonLd={jsonLd}
 >
 	<article class="article">
 		{/* Hero: Full-width featured image */}
 		{post.heroImage && (
 			<div class="article-hero">
-				<img src={post.heroImage} alt={post.title} width="1920" height="1080" fetchpriority="high" />
+				<PostImage
+					src={post.heroImage}
+					alt={post.title}
+					ratio="16/9"
+					sizes="(min-width: 1280px) 1200px, 100vw"
+					widths={[640, 960, 1280, 1600]}
+					priority
+				/>
 			</div>
 		)}
 

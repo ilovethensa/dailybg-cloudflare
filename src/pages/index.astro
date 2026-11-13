@@ -1,5 +1,8 @@
 ---
+import { getImage } from "astro:assets";
 import Base from "../layouts/Base.astro";
+import Icon from "../components/Icon.astro";
+import PostImage from "../components/PostImage.astro";
 import { SITE_DESCRIPTION, SITE_LOGO, SITE_TAGLINE, SITE_TITLE, TWITTER_SITE } from "../consts";
 import { CATEGORIES } from "../lib/categories";
 import { getAllPosts, getFeaturedPosts, toPostSummary } from "../lib/posts-db";
@@ -56,6 +59,30 @@ const formatTime = (date: Date) =>
 
 const siteUrl = Astro.url.origin;
 
+/**
+ * Preload exactly the candidate set the lead <img> will pick, so the LCP image
+ * starts downloading with the HTML instead of after CSS/layout. Restricted to
+ * hosts the image service is allowed to fetch.
+ */
+const LEAD_SIZES = "(min-width: 1024px) 640px, 100vw";
+const LEAD_WIDTHS = [480, 640, 900, 1200];
+let leadPreload: { src: string; srcset?: string; sizes?: string } | null = null;
+if (lead?.image) {
+	try {
+		const preloaded = await getImage({
+			src: lead.image,
+			width: 1200,
+			height: 750,
+			widths: LEAD_WIDTHS,
+			format: "webp",
+			quality: 75,
+		});
+		leadPreload = { src: preloaded.src, srcset: preloaded.srcSet.attribute, sizes: LEAD_SIZES };
+	} catch {
+		leadPreload = null;
+	}
+}
+
 const jsonLd = {
 	"@context": "https://schema.org",
 	"@graph": [
@@ -95,8 +122,15 @@ const jsonLd = {
 	twitterSite={TWITTER_SITE}
 	jsonLd={jsonLd}
 	navLinks={navLinks}
+	preloadImage={leadPreload}
 >
 	<style>
+		/* Skip layout/paint for below-the-fold category blocks until needed. */
+		.home-section {
+			content-visibility: auto;
+			contain-intrinsic-size: auto 640px;
+		}
+
 		.headline-text a {
 			color: inherit;
 		}
@@ -137,11 +171,12 @@ const jsonLd = {
 									</h3>
 									<div class="my-1 aspect-[16/10] w-full overflow-hidden bg-surface-subtle">
 										{story.image ? (
-											<img
+											<PostImage
 												src={story.image}
 												alt={story.title}
 												class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-												loading="lazy"
+												sizes="(min-width: 1024px) 300px, 100vw"
+												widths={[320, 480, 640]}
 											/>
 										) : (
 											<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
@@ -178,7 +213,14 @@ const jsonLd = {
 								</h1>
 								<div class="relative my-2 aspect-[16/10] w-full overflow-hidden bg-surface-subtle">
 									{lead.image ? (
-										<img src={lead.image} alt={lead.title} class="h-full w-full object-cover" fetchpriority="high" />
+										<PostImage
+											src={lead.image}
+											alt={lead.title}
+											class="h-full w-full object-cover"
+											sizes={LEAD_SIZES}
+											widths={LEAD_WIDTHS}
+											priority
+										/>
 									) : (
 										<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
 											img
@@ -255,7 +297,7 @@ const jsonLd = {
 								class="mt-2 flex items-center justify-center gap-1 border border-border-hairline bg-surface-subtle py-1.5 text-center font-eyebrow-category text-[10px] uppercase tracking-wider text-primary transition-colors hover:bg-ticker-bg hover:text-surface"
 							>
 								Към пълния денонощен архив
-								<span class="material-symbols-outlined text-[14px]">arrow_forward</span>
+								<Icon name="arrow_forward" class="text-[14px]" />
 							</a>
 						</aside>
 
@@ -290,11 +332,13 @@ const jsonLd = {
 												</div>
 												<div class="my-1 aspect-[16/9] w-full overflow-hidden bg-surface-subtle">
 													{story.image ? (
-														<img
+														<PostImage
 															src={story.image}
 															alt={story.title}
 															class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-															loading="lazy"
+															ratio="16/9"
+															sizes="(min-width: 1024px) 300px, (min-width: 768px) 45vw, 100vw"
+															widths={[320, 480, 640]}
 														/>
 													) : (
 														<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
@@ -322,7 +366,7 @@ const jsonLd = {
 
 					<!-- 2. CATEGORY SECTIONS (generated from post categories) -->
 					{sections.map((section) => (
-						<section class="border-b-2 border-border-dark py-space-md">
+						<section class="home-section border-b-2 border-border-dark py-space-md">
 							<div class="mb-space-sm flex flex-wrap items-center justify-between gap-2 border-b border-border-hairline pb-1">
 								<div class="flex flex-wrap items-center gap-space-sm">
 									<h2 class="font-masthead text-headline-secondary uppercase tracking-tight text-primary">
@@ -340,7 +384,7 @@ const jsonLd = {
 									class="flex items-center gap-0.5 font-timestamp text-timestamp text-secondary hover:underline"
 								>
 									Всички новини от рубриката
-									<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+									<Icon name="chevron_right" class="text-[14px]" />
 								</a>
 							</div>
 
@@ -351,11 +395,12 @@ const jsonLd = {
 										class="block aspect-[16/10] w-full overflow-hidden bg-surface-subtle md:w-2/5"
 									>
 										{section.posts[0].image ? (
-											<img
+											<PostImage
 												src={section.posts[0].image}
 												alt={section.posts[0].title}
 												class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-												loading="lazy"
+												sizes="(min-width: 768px) 40vw, 100vw"
+												widths={[400, 640, 900]}
 											/>
 										) : (
 											<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
@@ -411,11 +456,12 @@ const jsonLd = {
 											<div class="space-y-0.5">
 												<div class="my-1 h-[240px] w-full overflow-hidden bg-surface-subtle">
 													{story.image ? (
-														<img
+														<PostImage
 															src={story.image}
 															alt={story.title}
 															class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-															loading="lazy"
+															sizes="(min-width: 1024px) 300px, (min-width: 768px) 50vw, 100vw"
+															widths={[320, 480, 640]}
 														/>
 													) : (
 														<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">

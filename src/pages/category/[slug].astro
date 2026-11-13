@@ -1,5 +1,7 @@
 ---
 import Base from "../../layouts/Base.astro";
+import Icon from "../../components/Icon.astro";
+import PostImage from "../../components/PostImage.astro";
 import { CATEGORIES, getCategoryBySlug } from "../../lib/categories";
 import { getPostsByCategorySlug, toPostSummary } from "../../lib/posts-db";
 import { TWITTER_SITE } from "../../consts";
@@ -94,7 +96,7 @@ const jsonLd = {
 					class="flex items-center gap-0.5 font-timestamp text-timestamp text-secondary hover:underline"
 				>
 					Целият архив
-					<span class="material-symbols-outlined text-[14px]">chevron_right</span>
+					<Icon name="chevron_right" class="text-[14px]" />
 				</a>
 			</div>
 			<h1 class="mt-1 font-masthead text-headline-primary uppercase tracking-tight text-primary md:text-headline-lead">
@@ -117,11 +119,12 @@ const jsonLd = {
 						<div class="space-y-0.5">
 							<div class="my-1 aspect-[16/10] w-full overflow-hidden bg-surface-subtle">
 								{story.image ? (
-									<img
+									<PostImage
 										src={story.image}
 										alt={story.title}
 										class="h-full w-full object-cover transition-transform duration-300 group-hover:scale-105"
-										loading="lazy"
+										sizes="(min-width: 1280px) 300px, (min-width: 768px) 50vw, 100vw"
+										widths={[320, 480, 640]}
 									/>
 								) : (
 									<span class="flex h-full w-full items-center justify-center text-[10px] uppercase tracking-widest text-outline">
