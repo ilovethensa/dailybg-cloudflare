@@ -24,14 +24,30 @@ export type Post = {
 	readingTime: number;
 };
 
+/**
+ * Columns needed to render cards, lists and feeds. Deliberately excludes
+ * `body`: pulling 200 Markdown documents on every request was the Worker's
+ * biggest CPU cost.
+ */
+const SUMMARY_COLUMNS =
+	"slug, title, excerpt, pub_date, updated_date, category, tags, author, hero_image, draft, featured, featured_rank, reading_time";
+
 function rowToPost(row: Record<string, unknown>): Post {
-	const body = row.body as string;
-	return {
+	const body = (row.body as string | undefined) ?? "";
+	const storedReadingTime = row.reading_time;
+	const readingTime =
+		storedReadingTime !== null && storedReadingTime !== undefined
+			? Number(storedReadingTime)
+			: body
+				? getReadingTime(body)
+				: 1;
+
+	const post = {
 		slug: row.slug as string,
 		title: row.title as string,
 		excerpt: (row.excerpt as string) ?? null,
 		body,
-		html: marked.parse(body) as string,
+		html: "",
 		pubDate: new Date((row.pub_date as number) * 1000),
 		updatedDate: row.updated_date ? new Date((row.updated_date as number) * 1000) : null,
 		category: (row.category as string) ?? null,
@@ -41,8 +57,18 @@ function rowToPost(row: Record<string, unknown>): Post {
 		draft: (row.draft as number) !== 0,
 		featured: (row.featured as number) === 1,
 		featuredRank: (row.featured_rank as number) ?? null,
-		readingTime: getReadingTime(body),
+		readingTime,
 	};
+
+	// Markdown rendering is expensive. Only do it when `html` is actually
+	// read (the single-post API); pages never touch it.
+	Object.defineProperty(post, "html", {
+		enumerable: true,
+		configurable: true,
+		get: () => marked.parse(body) as string,
+	});
+
+	return post as Post;
 }
 
 /**
@@ -90,10 +116,39 @@ export function serializePostSummary(post: Post) {
 	};
 }
 
+/** Published posts without their bodies — the default for lists and feeds. */
 export async function getAllPosts(): Promise<Post[]> {
 	const db = env.DB;
 	if (!db) return [];
-	const { results } = await db.prepare("SELECT * FROM posts WHERE draft = 0 ORDER BY pub_date DESC").all<Record<string, unknown>>();
+	const { results } = await db
+		.prepare(`SELECT ${SUMMARY_COLUMNS} FROM posts WHERE draft = 0 ORDER BY pub_date DESC`)
+		.all<Record<string, unknown>>();
+	return (results ?? []).map(rowToPost);
+}
+
+/** Published posts including body/HTML. Only for endpoints that need the full text. */
+export async function getAllPostsFull(): Promise<Post[]> {
+	const db = env.DB;
+	if (!db) return [];
+	const { results } = await db
+		.prepare("SELECT * FROM posts WHERE draft = 0 ORDER BY pub_date DESC")
+		.all<Record<string, unknown>>();
+	return (results ?? []).map(rowToPost);
+}
+
+/** A few recent posts to show under an article, without scanning the archive. */
+export async function getRelatedPosts(slug: string, limit = 3): Promise<Post[]> {
+	const db = env.DB;
+	if (!db) return [];
+	const { results } = await db
+		.prepare(
+			`SELECT ${SUMMARY_COLUMNS} FROM posts
+			 WHERE draft = 0 AND slug != ?1
+			 ORDER BY pub_date DESC
+			 LIMIT ?2`,
+		)
+		.bind(slug, limit)
+		.all<Record<string, unknown>>();
 	return (results ?? []).map(rowToPost);
 }
 
@@ -106,7 +161,7 @@ export async function getFeaturedPosts(limit = 7): Promise<Post[]> {
 	if (!db) return [];
 	const { results } = await db
 		.prepare(
-			`SELECT * FROM posts
+			`SELECT ${SUMMARY_COLUMNS} FROM posts
 			 WHERE draft = 0 AND featured = 1
 			 ORDER BY COALESCE(featured_rank, 2147483647) ASC, pub_date DESC
 			 LIMIT ?1`,
@@ -163,7 +218,9 @@ export async function getPostsByTag(tag: string): Promise<Post[]> {
 	const db = env.DB;
 	if (!db) return [];
 	const { results } = await db
-		.prepare("SELECT * FROM posts WHERE draft = 0 AND tags LIKE ?1 ORDER BY pub_date DESC")
+		.prepare(
+			`SELECT ${SUMMARY_COLUMNS} FROM posts WHERE draft = 0 AND tags LIKE ?1 ORDER BY pub_date DESC`,
+		)
 		.bind(`%"${tag}"%`)
 		.all<Record<string, unknown>>();
 	return (results ?? []).map(rowToPost);
@@ -174,7 +231,7 @@ export async function getPostsByTagSlug(slug: string): Promise<Post[]> {
 	const db = env.DB;
 	if (!db) return [];
 	const { results } = await db
-		.prepare("SELECT * FROM posts WHERE draft = 0 ORDER BY pub_date DESC")
+		.prepare(`SELECT ${SUMMARY_COLUMNS} FROM posts WHERE draft = 0 ORDER BY pub_date DESC`)
 		.all<Record<string, unknown>>();
 	const wanted = tagToSlug(slug);
 	return (results ?? [])
@@ -237,7 +294,7 @@ export function toPostSummary(post: Post): PostSummary {
 				}
 			: null,
 		tags: post.tags.map((tag) => ({ slug: tagToSlug(tag), label: tag })),
-		readingTime: getReadingTime(post.body),
+		readingTime: post.readingTime,
 		author: post.author ?? undefined,
 		date: post.pubDate,
 	};
@@ -330,7 +387,9 @@ export async function listPosts(opts: ListPostsOptions = {}): Promise<PaginatedP
 	const totalPages = Math.max(1, Math.ceil(total / limit));
 
 	const { results } = await db
-		.prepare(`SELECT * FROM posts ${whereSql} ORDER BY ${orderSql} LIMIT ${limit} OFFSET ${(page - 1) * limit}`)
+		.prepare(
+			`SELECT ${SUMMARY_COLUMNS} FROM posts ${whereSql} ORDER BY ${orderSql} LIMIT ${limit} OFFSET ${(page - 1) * limit}`,
+		)
 		.bind(...binds)
 		.all<Record<string, unknown>>();
 
@@ -367,8 +426,8 @@ export async function createPost(input: CreatePostInput): Promise<Post | null> {
 
 	await db
 		.prepare(
-			`INSERT INTO posts (slug, title, excerpt, body, pub_date, updated_date, category, tags, author, hero_image, draft, featured, featured_rank)
-			 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)`,
+			`INSERT INTO posts (slug, title, excerpt, body, pub_date, updated_date, category, tags, author, hero_image, draft, featured, featured_rank, reading_time)
+			 VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, ?14)`,
 		)
 		.bind(
 			input.slug,
@@ -384,6 +443,7 @@ export async function createPost(input: CreatePostInput): Promise<Post | null> {
 			input.draft === false ? 0 : 1,
 			featured ? 1 : 0,
 			featured_rank,
+			getReadingTime(input.body),
 		)
 		.run();
 	return getPostBySlug(input.slug);
@@ -418,7 +478,12 @@ export async function updatePost(
 	let i = 1;
 
 	if (updates.title !== undefined) { fields.push(`title = ?${++i}`); values.push(updates.title); }
-	if (updates.body !== undefined) { fields.push(`body = ?${++i}`); values.push(updates.body); }
+	if (updates.body !== undefined) {
+		fields.push(`body = ?${++i}`);
+		values.push(updates.body);
+		fields.push(`reading_time = ?${++i}`);
+		values.push(getReadingTime(updates.body));
+	}
 	if (updates.excerpt !== undefined) { fields.push(`excerpt = ?${++i}`); values.push(updates.excerpt); }
 	if (updates.category !== undefined) { fields.push(`category = ?${++i}`); values.push(categoryToLabel(updates.category)); }
 	if (updates.tags !== undefined) { fields.push(`tags = ?${++i}`); values.push(JSON.stringify(updates.tags)); }
