@@ -1,5 +1,6 @@
 ---
 import { Image } from "astro:assets";
+import { wikimediaSources } from "../lib/image-sources";
 
 /**
  * Responsive image for remote hero URLs stored in D1.
@@ -42,9 +43,12 @@ const width = widths[widths.length - 1];
 const height = Math.round((width * ratioH) / ratioW);
 
 const isRemote = !!src && /^https?:\/\//.test(src);
+// Wikimedia serves its own pre-sized thumbnails; every other host goes through
+// the Cloudflare Images binding at `/_image`.
+const wiki = isRemote ? wikimediaSources(src as string, widths) : null;
 
-// Drop the (also transformed) srcset candidates before retrying the original,
-// otherwise the browser would re-pick the failing `/_image` URLs.
+// Drop any srcset candidates before retrying the original, otherwise the
+// browser would re-pick the URLs that just failed.
 const fallback = isRemote
 	? `this.onerror=null;this.removeAttribute("srcset");this.src=${JSON.stringify(src)}`
 	: undefined;
@@ -54,7 +58,21 @@ const fetchpriority = priority ? "high" : undefined;
 ---
 
 {
-	isRemote ? (
+	wiki ? (
+		<img
+			src={wiki.src}
+			srcset={wiki.srcset}
+			sizes={sizes}
+			alt={alt}
+			width={width}
+			height={height}
+			loading={loading}
+			fetchpriority={fetchpriority}
+			decoding="async"
+			onerror={fallback}
+			class={className}
+		/>
+	) : isRemote ? (
 		<Image
 			src={src as string}
 			alt={alt}

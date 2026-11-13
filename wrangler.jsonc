@@ -1,6 +1,13 @@
 {
-	"name": "dailybg",
+	// dailybg.org is attached to this script; "dailybg" is an older duplicate.
+	"name": "dailybg-cloudflare",
 	"compatibility_date": "2025-05-21",
+	"kv_namespaces": [
+		{
+			"binding": "SESSION",
+			"id": "8b2fa3c3b2964d3f8b5f7d199813c3c0"
+		}
+	],
 	"d1_databases": [
 		{
 			"binding": "DB",

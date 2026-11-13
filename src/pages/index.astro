@@ -5,6 +5,7 @@ import Icon from "../components/Icon.astro";
 import PostImage from "../components/PostImage.astro";
 import { SITE_DESCRIPTION, SITE_LOGO, SITE_TAGLINE, SITE_TITLE, TWITTER_SITE } from "../consts";
 import { CATEGORIES } from "../lib/categories";
+import { wikimediaSources } from "../lib/image-sources";
 import { getAllPosts, getFeaturedPosts, toPostSummary } from "../lib/posts-db";
 
 export const prerender = false;
@@ -67,7 +68,10 @@ const siteUrl = Astro.url.origin;
 const LEAD_SIZES = "(min-width: 1024px) 640px, 100vw";
 const LEAD_WIDTHS = [480, 640, 900, 1200];
 let leadPreload: { src: string; srcset?: string; sizes?: string } | null = null;
-if (lead?.image) {
+const leadWiki = lead?.image ? wikimediaSources(lead.image, LEAD_WIDTHS) : null;
+if (leadWiki) {
+	leadPreload = { src: leadWiki.src, srcset: leadWiki.srcset, sizes: LEAD_SIZES };
+} else if (lead?.image) {
 	try {
 		const preloaded = await getImage({
 			src: lead.image,
